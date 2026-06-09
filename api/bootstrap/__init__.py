@@ -1,2 +1,0 @@
-from .catalog_structure import ensure_standard_catalog_structure
-

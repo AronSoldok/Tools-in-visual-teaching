@@ -1,0 +1,70 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useDroppable } from "@dnd-kit/core";
+import { DraggableBlock } from "./blocks/DraggableBlock";
+import { useBoardStore } from "@/store/boardStore";
+
+export function Workspace() {
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const blocks = useBoardStore((s) => s.blocks);
+  const selectedBlockId = useBoardStore((s) => s.selectedBlockId);
+  const setSelectedBlockId = useBoardStore((s) => s.setSelectedBlockId);
+  const setWorkspaceSize = useBoardStore((s) => s.setWorkspaceSize);
+  const activeTool = useBoardStore((s) => s.activeTool);
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: "workspace",
+    data: { zone: "workspace" },
+    disabled: activeTool !== "select",
+  });
+
+  useEffect(() => {
+    const el = workspaceRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setWorkspaceSize(entry.contentRect.width, entry.contentRect.height);
+      }
+    });
+
+    observer.observe(el);
+    setWorkspaceSize(el.clientWidth, el.clientHeight);
+
+    return () => observer.disconnect();
+  }, [setWorkspaceSize]);
+
+  const freeBlocks = blocks.filter((b) => b.column === "free");
+
+  return (
+    <div
+      ref={(node) => {
+        setNodeRef(node);
+        workspaceRef.current = node;
+      }}
+      className={`workspace ${isOver ? "drop-over" : ""}`}
+      aria-label="Рабочая область"
+      onClick={() => {
+        if (activeTool === "select") setSelectedBlockId(null);
+      }}
+    >
+      <div className="workspace-grid" />
+      {freeBlocks.map((block) => (
+        <div
+          key={block.id}
+          className={`workspace-block-wrapper ${block.animating ? "regroup-animate" : ""}`}
+          style={{ left: block.x, top: block.y, position: "absolute" }}
+        >
+          <DraggableBlock
+            id={block.id}
+            type={block.type}
+            selected={selectedBlockId === block.id}
+            onClick={() => setSelectedBlockId(block.id)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
