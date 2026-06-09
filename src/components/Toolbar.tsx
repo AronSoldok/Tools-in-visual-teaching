@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
+import { BOARD_MODE_LABELS, type BoardMode } from "@/lib/boardModes";
+import { exportBoardToPng } from "@/lib/exportBoard";
 import { BlockPalette } from "./BlockPalette";
 import { clearAnnotationCanvas } from "./annotations/AnnotationLayer";
 import { useBoardStore } from "@/store/boardStore";
@@ -11,13 +13,19 @@ const TOOLS: { id: ToolMode; label: string; icon: string }[] = [
   { id: "pen", label: "Ручка", icon: "✏" },
   { id: "highlighter", label: "Маркер", icon: "🖍" },
   { id: "text", label: "Текст", icon: "T" },
+  { id: "eraser", label: "Ластик", icon: "⌫" },
 ];
+
+const MODES: BoardMode[] = ["whole", "decimal", "comparison"];
 
 export function Toolbar() {
   const activeTool = useBoardStore((s) => s.activeTool);
+  const boardMode = useBoardStore((s) => s.boardMode);
   const setActiveTool = useBoardStore((s) => s.setActiveTool);
+  const setBoardMode = useBoardStore((s) => s.setBoardMode);
   const composeBlocks = useBoardStore((s) => s.composeBlocks);
   const decomposeSelected = useBoardStore((s) => s.decomposeSelected);
+  const deleteSelectedBlock = useBoardStore((s) => s.deleteSelectedBlock);
   const selectedBlockId = useBoardStore((s) => s.selectedBlockId);
   const clearAll = useBoardStore((s) => s.clearAll);
   const clearDrawings = useBoardStore((s) => s.clearDrawings);
@@ -52,8 +60,41 @@ export function Toolbar() {
     }
   };
 
+  const handleModeChange = (mode: BoardMode) => {
+    if (mode === boardMode) return;
+    if (
+      useBoardStore.getState().blocks.length > 0 &&
+      !window.confirm("Смена режима очистит доску. Продолжить?")
+    ) {
+      return;
+    }
+    setBoardMode(mode);
+    clearAnnotationCanvas();
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportBoardToPng();
+    } catch {
+      window.alert("Не удалось экспортировать изображение.");
+    }
+  };
+
   return (
     <header className="toolbar">
+      <div className="toolbar-section toolbar-modes">
+        {MODES.map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={`mode-btn ${boardMode === mode ? "active" : ""}`}
+            onClick={() => handleModeChange(mode)}
+          >
+            {BOARD_MODE_LABELS[mode]}
+          </button>
+        ))}
+      </div>
+
       <div className="toolbar-section toolbar-palette">
         <BlockPalette />
       </div>
@@ -78,7 +119,7 @@ export function Toolbar() {
         <button
           type="button"
           className="action-btn"
-          onClick={composeBlocks}
+          onClick={() => composeBlocks()}
           title="Собрать: 10 мелких → 1 крупный"
         >
           Собрать
@@ -91,6 +132,15 @@ export function Toolbar() {
           title="Разобрать выбранный блок"
         >
           Разобрать
+        </button>
+        <button
+          type="button"
+          className="action-btn"
+          onClick={deleteSelectedBlock}
+          disabled={!selectedBlockId}
+          title="Удалить выбранный блок (Delete)"
+        >
+          Удалить
         </button>
         <button
           type="button"
@@ -110,11 +160,19 @@ export function Toolbar() {
         </button>
         <button
           type="button"
+          className="action-btn"
+          onClick={handleExport}
+          title="Скачать PNG"
+        >
+          PNG
+        </button>
+        <button
+          type="button"
           className="action-btn fullscreen-btn"
           onClick={toggleFullscreen}
           title={isFullscreen ? "Выйти из полноэкранного режима" : "Полный экран"}
         >
-          {isFullscreen ? "⛶" : "⛶"} {isFullscreen ? "Выйти" : "Экран"}
+          {isFullscreen ? "Выйти" : "Экран"}
         </button>
       </div>
     </header>

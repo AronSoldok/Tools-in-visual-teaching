@@ -321,6 +321,162 @@ body {
   filter: drop-shadow(0 0 4px var(--primary));
 }
 
+.draggable-block.invalid,
+.invalid-block {
+  outline: 3px solid var(--danger);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mode-btn {
+  min-height: var(--touch-min);
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mode-btn.active {
+  border-color: var(--primary);
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+.toolbar-modes {
+  border-right: 1px solid var(--border);
+  padding-right: 12px;
+}
+
+.number-primary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.number-breakdown {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.comparison-display {
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.comparison-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparison-operator {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.comparison-operator.result-greater,
+.comparison-operator.result-less {
+  color: #059669;
+}
+
+.comparison-operator.result-equal {
+  color: var(--text-muted);
+}
+
+.comparison-board {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.comparison-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.comparison-panel .place-value-chart {
+  height: 200px;
+  flex-shrink: 0;
+}
+
+.comparison-workspace {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.comparison-divider {
+  width: 3px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.board-main.comparison-mode {
+  flex-direction: column;
+}
+
+.comparison-workspaces {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.decimal-grid {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow);
+}
+
+.decimal-grid-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.decimal-grid-cells {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 1px;
+  border: 2px solid var(--border);
+}
+
+.decimal-cell {
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  padding: 0;
+  min-width: unset;
+  min-height: unset;
+}
+
+.decimal-cell.filled {
+  background: #5b9bd5;
+}
+
+.annotation-layer.eraser-mode .text-annotation {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .regroup-animate {
   animation: regroupPulse 0.4s ease-out;
 }

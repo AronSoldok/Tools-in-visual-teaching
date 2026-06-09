@@ -1,12 +1,16 @@
+import type { BoardMode } from "./boardModes";
+import { getExpectedColumn } from "./boardModes";
 import {
   BLOCK_CONFIG,
   CELL_SIZE,
   type BoardBlock,
+  type BlockType,
+  type ChartColumn,
   type PlaceColumn,
 } from "./blockTypes";
 
 export interface ColumnLayout {
-  column: Exclude<PlaceColumn, "free">;
+  column: ChartColumn;
   x: number;
   width: number;
 }
@@ -15,12 +19,7 @@ const CHART_PADDING = 12;
 const COLUMN_GAP = 8;
 
 export function getColumnLayouts(chartWidth: number): ColumnLayout[] {
-  const columns: Exclude<PlaceColumn, "free">[] = [
-    "thousands",
-    "hundreds",
-    "tens",
-    "ones",
-  ];
+  const columns: ChartColumn[] = ["thousands", "hundreds", "tens", "ones"];
   const innerWidth = chartWidth - CHART_PADDING * 2;
   const columnWidth = (innerWidth - COLUMN_GAP * 3) / 4;
 
@@ -34,7 +33,7 @@ export function getColumnLayouts(chartWidth: number): ColumnLayout[] {
 export function detectColumn(
   x: number,
   chartWidth: number,
-): Exclude<PlaceColumn, "free"> | null {
+): ChartColumn | null {
   const layouts = getColumnLayouts(chartWidth);
   for (const layout of layouts) {
     if (x >= layout.x && x <= layout.x + layout.width) {
@@ -44,9 +43,18 @@ export function detectColumn(
   return null;
 }
 
+export function isValidBlockColumn(
+  type: BlockType,
+  column: PlaceColumn,
+  mode: BoardMode,
+): boolean {
+  if (column === "free") return true;
+  return getExpectedColumn(type, mode) === column;
+}
+
 export function snapBlockToColumn(
   block: BoardBlock,
-  column: Exclude<PlaceColumn, "free">,
+  column: ChartColumn,
   chartWidth: number,
   chartHeight: number,
   existingBlocks: BoardBlock[],
@@ -56,7 +64,7 @@ export function snapBlockToColumn(
   const { width, height } = BLOCK_CONFIG[block.type];
 
   const columnBlocks = existingBlocks.filter(
-    (b) => b.id !== block.id && b.column === column,
+    (b) => b.id !== block.id && b.column === column && b.group === block.group,
   );
 
   const maxPerRow = Math.max(
@@ -80,20 +88,22 @@ export function snapBlockToColumn(
 export function getDefaultFreePosition(
   type: BoardBlock["type"],
   index: number,
+  offsetX = 0,
 ): { x: number; y: number } {
   const { width, height } = BLOCK_CONFIG[type];
   const col = index % 4;
   const row = Math.floor(index / 4);
   return {
-    x: 320 + col * (width + 16),
+    x: offsetX + 40 + col * (width + 16),
     y: 80 + row * (height + 16),
   };
 }
 
 export function columnForBlockType(
   type: BoardBlock["type"],
-): Exclude<PlaceColumn, "free"> {
-  return BLOCK_CONFIG[type].column as Exclude<PlaceColumn, "free">;
+  mode: BoardMode = "whole",
+): ChartColumn {
+  return getExpectedColumn(type, mode);
 }
 
 export { CHART_PADDING, CELL_SIZE };

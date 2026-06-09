@@ -9,10 +9,39 @@ interface Point {
 }
 
 interface Stroke {
+  id: string;
   points: Point[];
   color: string;
   width: number;
   opacity: number;
+}
+
+const ERASER_RADIUS = 16;
+
+function distanceToSegment(p: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) {
+    return Math.hypot(p.x - a.x, p.y - a.y);
+  }
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const projX = a.x + t * dx;
+  const projY = a.y + t * dy;
+  return Math.hypot(p.x - projX, p.y - projY);
+}
+
+function strokeHitTest(stroke: Stroke, point: Point): boolean {
+  for (let i = 1; i < stroke.points.length; i++) {
+    if (
+      distanceToSegment(point, stroke.points[i - 1], stroke.points[i]) <=
+      ERASER_RADIUS + stroke.width / 2
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function AnnotationLayer() {
@@ -29,6 +58,7 @@ export function AnnotationLayer() {
   const activeTool = useBoardStore((s) => s.activeTool);
   const textAnnotations = useBoardStore((s) => s.textAnnotations);
   const addTextAnnotation = useBoardStore((s) => s.addTextAnnotation);
+  const removeTextAnnotation = useBoardStore((s) => s.removeTextAnnotation);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -90,7 +120,23 @@ export function AnnotationLayer() {
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
+  const eraseAt = (point: Point) => {
+    const before = strokesRef.current.length;
+    strokesRef.current = strokesRef.current.filter(
+      (stroke) => !strokeHitTest(stroke, point),
+    );
+    if (strokesRef.current.length !== before) {
+      redraw();
+    }
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (activeTool === "eraser") {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      eraseAt(getPoint(e));
+      return;
+    }
+
     if (activeTool === "text") {
       const point = getPoint(e);
       setTextInput({ x: point.x, y: point.y, value: "" });
@@ -102,6 +148,7 @@ export function AnnotationLayer() {
     e.currentTarget.setPointerCapture(e.pointerId);
     const point = getPoint(e);
     currentStrokeRef.current = {
+      id: `stroke-${Date.now()}`,
       points: [point],
       color: activeTool === "pen" ? "#1e293b" : "#facc15",
       width: activeTool === "pen" ? 3 : 18,
@@ -111,6 +158,10 @@ export function AnnotationLayer() {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (activeTool === "eraser") {
+      eraseAt(getPoint(e));
+      return;
+    }
     if (!currentStrokeRef.current) return;
     currentStrokeRef.current.points.push(getPoint(e));
     redraw();
@@ -131,12 +182,16 @@ export function AnnotationLayer() {
     setTextInput(null);
   };
 
-  const isDrawing = activeTool === "pen" || activeTool === "highlighter" || activeTool === "text";
+  const isActive =
+    activeTool === "pen" ||
+    activeTool === "highlighter" ||
+    activeTool === "text" ||
+    activeTool === "eraser";
 
   return (
     <div
       ref={containerRef}
-      className={`annotation-layer ${isDrawing ? "active" : ""}`}
+      className={`annotation-layer ${isActive ? "active" : ""} ${activeTool === "eraser" ? "eraser-mode" : ""}`}
     >
       <canvas
         ref={canvasRef}
@@ -151,6 +206,12 @@ export function AnnotationLayer() {
           key={ann.id}
           className="text-annotation"
           style={{ left: ann.x, top: ann.y }}
+          onClick={(e) => {
+            if (activeTool === "eraser") {
+              e.stopPropagation();
+              removeTextAnnotation(ann.id);
+            }
+          }}
         >
           {ann.text}
         </div>

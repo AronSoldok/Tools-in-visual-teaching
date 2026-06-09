@@ -27,7 +27,11 @@ function blocksInColumn(blocks: BoardBlock[], column: PlaceColumn, type: BlockTy
   return blocks.filter((b) => b.column === column && b.type === type);
 }
 
-export function composeAll(blocks: BoardBlock[], chartWidth: number, chartHeight: number): BoardBlock[] {
+export function composeAll(
+  blocks: BoardBlock[],
+  chartWidth: number,
+  chartHeight: number,
+): BoardBlock[] {
   let result = [...blocks];
   let changed = true;
 
@@ -49,6 +53,7 @@ export function composeAll(blocks: BoardBlock[], chartWidth: number, chartHeight
 
         const toRemove = group.slice(0, COMPOSE_THRESHOLD);
         const removeIds = new Set(toRemove.map((b) => b.id));
+        const blockGroup = toRemove[0].group;
         result = result.filter((b) => !removeIds.has(b.id));
 
         const newBlock: BoardBlock = {
@@ -57,6 +62,7 @@ export function composeAll(blocks: BoardBlock[], chartWidth: number, chartHeight
           column: targetColumn,
           x: 0,
           y: 0,
+          group: blockGroup,
           animating: true,
         };
 
@@ -110,6 +116,7 @@ export function decomposeBlock(
       column: targetColumn,
       x: 0,
       y: 0,
+      group: target.group,
       animating: true,
     };
 

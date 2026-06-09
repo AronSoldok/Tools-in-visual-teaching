@@ -1,8 +1,9 @@
+import type { BlockGroup } from "./boardModes";
+
+export type { BlockGroup };
 export type BlockType = "unit" | "rod" | "flat" | "cube";
-
 export type PlaceColumn = "ones" | "tens" | "hundreds" | "thousands" | "free";
-
-export type ToolMode = "select" | "pen" | "highlighter" | "text";
+export type ToolMode = "select" | "pen" | "highlighter" | "text" | "eraser";
 
 export const CELL_SIZE = 24;
 
@@ -93,7 +94,9 @@ export interface BoardBlock {
   x: number;
   y: number;
   column: PlaceColumn;
+  group: BlockGroup;
   animating?: boolean;
+  invalid?: boolean;
 }
 
 export interface TextAnnotation {

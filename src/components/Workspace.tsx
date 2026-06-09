@@ -2,20 +2,33 @@
 
 import { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import type { BlockGroup } from "@/lib/boardModes";
 import { DraggableBlock } from "./blocks/DraggableBlock";
+import { DecimalGrid } from "./DecimalGrid";
 import { useBoardStore } from "@/store/boardStore";
 
-export function Workspace() {
+interface WorkspaceProps {
+  group?: BlockGroup;
+  droppableId?: string;
+  className?: string;
+}
+
+export function Workspace({
+  group = "main",
+  droppableId = "workspace",
+  className = "",
+}: WorkspaceProps) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const blocks = useBoardStore((s) => s.blocks);
   const selectedBlockId = useBoardStore((s) => s.selectedBlockId);
   const setSelectedBlockId = useBoardStore((s) => s.setSelectedBlockId);
   const setWorkspaceSize = useBoardStore((s) => s.setWorkspaceSize);
   const activeTool = useBoardStore((s) => s.activeTool);
+  const boardMode = useBoardStore((s) => s.boardMode);
 
   const { setNodeRef, isOver } = useDroppable({
-    id: "workspace",
-    data: { zone: "workspace" },
+    id: droppableId,
+    data: { zone: "workspace", group },
     disabled: activeTool !== "select",
   });
 
@@ -34,9 +47,11 @@ export function Workspace() {
     setWorkspaceSize(el.clientWidth, el.clientHeight);
 
     return () => observer.disconnect();
-  }, [setWorkspaceSize]);
+  }, [setWorkspaceSize, droppableId]);
 
-  const freeBlocks = blocks.filter((b) => b.column === "free");
+  const freeBlocks = blocks.filter(
+    (b) => b.group === group && b.column === "free",
+  );
 
   return (
     <div
@@ -44,17 +59,18 @@ export function Workspace() {
         setNodeRef(node);
         workspaceRef.current = node;
       }}
-      className={`workspace ${isOver ? "drop-over" : ""}`}
+      className={`workspace ${className} ${isOver ? "drop-over" : ""}`}
       aria-label="Рабочая область"
       onClick={() => {
         if (activeTool === "select") setSelectedBlockId(null);
       }}
     >
       <div className="workspace-grid" />
+      {boardMode === "decimal" && group === "main" && <DecimalGrid />}
       {freeBlocks.map((block) => (
         <div
           key={block.id}
-          className={`workspace-block-wrapper ${block.animating ? "regroup-animate" : ""}`}
+          className={`workspace-block-wrapper comparison-block-wrapper ${block.animating ? "regroup-animate" : ""}`}
           style={{ left: block.x, top: block.y, position: "absolute" }}
         >
           <DraggableBlock

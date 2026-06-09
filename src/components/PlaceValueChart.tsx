@@ -2,12 +2,25 @@
 
 import { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import type { BlockGroup } from "@/lib/boardModes";
 import { DraggableBlock } from "./blocks/DraggableBlock";
 import { COLUMN_LABELS, PLACE_COLUMNS } from "@/lib/blockTypes";
 import { getColumnLayouts } from "@/lib/snap";
 import { useBoardStore } from "@/store/boardStore";
 
-export function PlaceValueChart() {
+interface PlaceValueChartProps {
+  group?: BlockGroup;
+  droppableId?: string;
+  title?: string;
+  chartClassName?: string;
+}
+
+export function PlaceValueChart({
+  group = "main",
+  droppableId = "place-value-chart",
+  title = "Разряды",
+  chartClassName = "",
+}: PlaceValueChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const blocks = useBoardStore((s) => s.blocks);
   const chartWidth = useBoardStore((s) => s.chartWidth);
@@ -17,8 +30,8 @@ export function PlaceValueChart() {
   const activeTool = useBoardStore((s) => s.activeTool);
 
   const { setNodeRef, isOver } = useDroppable({
-    id: "place-value-chart",
-    data: { zone: "chart" },
+    id: droppableId,
+    data: { zone: "chart", group },
     disabled: activeTool !== "select",
   });
 
@@ -37,10 +50,12 @@ export function PlaceValueChart() {
     setChartSize(el.clientWidth, el.clientHeight);
 
     return () => observer.disconnect();
-  }, [setChartSize]);
+  }, [setChartSize, droppableId]);
 
   const layouts = getColumnLayouts(chartWidth);
-  const chartBlocks = blocks.filter((b) => b.column !== "free");
+  const chartBlocks = blocks.filter(
+    (b) => b.group === group && b.column !== "free",
+  );
 
   return (
     <div
@@ -48,10 +63,10 @@ export function PlaceValueChart() {
         setNodeRef(node);
         chartRef.current = node;
       }}
-      className={`place-value-chart ${isOver ? "drop-over" : ""}`}
-      aria-label="Таблица разрядов"
+      className={`place-value-chart ${chartClassName} ${isOver ? "drop-over" : ""}`}
+      aria-label={`Таблица разрядов: ${title}`}
     >
-      <h2 className="chart-title">Разряды</h2>
+      <h2 className="chart-title">{title}</h2>
       <div className="chart-columns">
         {PLACE_COLUMNS.map((column) => {
           const layout = layouts.find((l) => l.column === column)!;
@@ -71,13 +86,15 @@ export function PlaceValueChart() {
         {chartBlocks.map((block) => (
           <div
             key={block.id}
-            className={`chart-block-wrapper ${block.animating ? "regroup-animate" : ""}`}
+            className={`chart-block-wrapper ${block.animating ? "regroup-animate" : ""} ${block.invalid ? "invalid-block" : ""}`}
             style={{ left: block.x, top: block.y, position: "absolute" }}
+            title={block.invalid ? "Неверный разряд для этого блока" : undefined}
           >
             <DraggableBlock
               id={block.id}
               type={block.type}
               selected={selectedBlockId === block.id}
+              invalid={block.invalid}
               onClick={() => setSelectedBlockId(block.id)}
             />
           </div>
