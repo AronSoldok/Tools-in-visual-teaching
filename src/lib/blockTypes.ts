@@ -88,6 +88,16 @@ export const COLUMN_LABELS: Record<ChartColumn, string> = {
   ones: "Единицы",
 };
 
+export const COLUMN_THEME: Record<
+  ChartColumn,
+  { bg: string; border: string; blockType: BlockType; valueLabel: string }
+> = {
+  thousands: { bg: "#fff0e6", border: "#e07b39", blockType: "cube", valueLabel: "1000" },
+  hundreds: { bg: "#e8f4fc", border: "#5b9bd5", blockType: "flat", valueLabel: "100" },
+  tens: { bg: "#e8f8e8", border: "#6bc96b", blockType: "rod", valueLabel: "10" },
+  ones: { bg: "#fffbe6", border: "#f5d547", blockType: "unit", valueLabel: "1" },
+};
+
 export interface BoardBlock {
   id: string;
   type: BlockType;
@@ -97,6 +107,19 @@ export interface BoardBlock {
   group: BlockGroup;
   animating?: boolean;
   invalid?: boolean;
+  /** 1–9 filled segments when merged but not a full regroup */
+  partialFill?: number;
+  /** Silhouette of the next larger block (rod / flat / cube) */
+  partialShape?: BlockType;
+}
+
+export function getBlockCount(block: BoardBlock): number {
+  if (block.partialFill) return block.partialFill;
+  return 1;
+}
+
+export function getBlockEffectiveValue(block: BoardBlock): number {
+  return BLOCK_CONFIG[block.type].value * getBlockCount(block);
 }
 
 export interface TextAnnotation {

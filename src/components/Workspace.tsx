@@ -20,8 +20,8 @@ export function Workspace({
 }: WorkspaceProps) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const blocks = useBoardStore((s) => s.blocks);
-  const selectedBlockId = useBoardStore((s) => s.selectedBlockId);
-  const setSelectedBlockId = useBoardStore((s) => s.setSelectedBlockId);
+  const selectedBlockIds = useBoardStore((s) => s.selectedBlockIds);
+  const clearSelection = useBoardStore((s) => s.clearSelection);
   const setWorkspaceSize = useBoardStore((s) => s.setWorkspaceSize);
   const activeTool = useBoardStore((s) => s.activeTool);
   const boardMode = useBoardStore((s) => s.boardMode);
@@ -62,7 +62,7 @@ export function Workspace({
       className={`workspace ${className} ${isOver ? "drop-over" : ""}`}
       aria-label="Рабочая область"
       onClick={() => {
-        if (activeTool === "select") setSelectedBlockId(null);
+        if (activeTool === "select") clearSelection();
       }}
     >
       <div className="workspace-grid" />
@@ -76,8 +76,7 @@ export function Workspace({
           <DraggableBlock
             id={block.id}
             type={block.type}
-            selected={selectedBlockId === block.id}
-            onClick={() => setSelectedBlockId(block.id)}
+            selected={selectedBlockIds.includes(block.id)}
           />
         </div>
       ))}

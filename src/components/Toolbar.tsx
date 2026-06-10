@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { BOARD_MODE_LABELS, type BoardMode } from "@/lib/boardModes";
 import { exportBoardToPng } from "@/lib/exportBoard";
 import { BlockPalette } from "./BlockPalette";
+import { ColorPicker } from "./ColorPicker";
 import { clearAnnotationCanvas } from "./annotations/AnnotationLayer";
 import { useBoardStore } from "@/store/boardStore";
 import type { ToolMode } from "@/lib/blockTypes";
@@ -26,11 +27,13 @@ export function Toolbar() {
   const composeBlocks = useBoardStore((s) => s.composeBlocks);
   const decomposeSelected = useBoardStore((s) => s.decomposeSelected);
   const deleteSelectedBlock = useBoardStore((s) => s.deleteSelectedBlock);
-  const selectedBlockId = useBoardStore((s) => s.selectedBlockId);
+  const selectedBlockIds = useBoardStore((s) => s.selectedBlockIds);
   const clearAll = useBoardStore((s) => s.clearAll);
   const clearDrawings = useBoardStore((s) => s.clearDrawings);
   const isFullscreen = useBoardStore((s) => s.isFullscreen);
   const setFullscreen = useBoardStore((s) => s.setFullscreen);
+
+  const hasSelection = selectedBlockIds.length > 0;
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -82,37 +85,48 @@ export function Toolbar() {
 
   return (
     <header className="toolbar">
-      <div className="toolbar-section toolbar-modes">
-        {MODES.map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            className={`mode-btn ${boardMode === mode ? "active" : ""}`}
-            onClick={() => handleModeChange(mode)}
-          >
-            {BOARD_MODE_LABELS[mode]}
-          </button>
-        ))}
+      <div className="toolbar-group">
+        <span className="toolbar-group-label">Режим</span>
+        <div className="toolbar-section toolbar-modes">
+          {MODES.map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              className={`mode-btn ${boardMode === mode ? "active" : ""}`}
+              onClick={() => handleModeChange(mode)}
+              aria-pressed={boardMode === mode}
+            >
+              {BOARD_MODE_LABELS[mode]}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="toolbar-section toolbar-palette">
-        <BlockPalette />
+      <div className="toolbar-group">
+        <span className="toolbar-group-label">Блоки</span>
+        <div className="toolbar-section toolbar-palette">
+          <BlockPalette />
+        </div>
       </div>
 
-      <div className="toolbar-section toolbar-tools">
-        {TOOLS.map((tool) => (
-          <button
-            key={tool.id}
-            type="button"
-            className={`tool-btn ${activeTool === tool.id ? "active" : ""}`}
-            onClick={() => setActiveTool(tool.id)}
-            title={tool.label}
-            aria-pressed={activeTool === tool.id}
-          >
-            <span className="tool-icon">{tool.icon}</span>
-            <span className="tool-label">{tool.label}</span>
-          </button>
-        ))}
+      <div className="toolbar-group">
+        <span className="toolbar-group-label">Инструменты</span>
+        <div className="toolbar-section toolbar-tools">
+          {TOOLS.map((tool) => (
+            <button
+              key={tool.id}
+              type="button"
+              className={`tool-btn ${activeTool === tool.id ? "active" : ""}`}
+              onClick={() => setActiveTool(tool.id)}
+              title={tool.label}
+              aria-pressed={activeTool === tool.id}
+            >
+              <span className="tool-icon">{tool.icon}</span>
+              <span className="tool-label">{tool.label}</span>
+            </button>
+          ))}
+          <ColorPicker activeTool={activeTool} />
+        </div>
       </div>
 
       <div className="toolbar-section toolbar-actions">
@@ -120,7 +134,7 @@ export function Toolbar() {
           type="button"
           className="action-btn"
           onClick={() => composeBlocks()}
-          title="Собрать: 10 мелких → 1 крупный"
+          title="Собрать выделенные (2+) или колонки по 10"
         >
           Собрать
         </button>
@@ -128,17 +142,17 @@ export function Toolbar() {
           type="button"
           className="action-btn"
           onClick={decomposeSelected}
-          disabled={!selectedBlockId}
-          title="Разобрать выбранный блок"
+          disabled={!hasSelection}
+          title="Разъединить выбранные блоки"
         >
-          Разобрать
+          Разъединить
         </button>
         <button
           type="button"
           className="action-btn"
           onClick={deleteSelectedBlock}
-          disabled={!selectedBlockId}
-          title="Удалить выбранный блок (Delete)"
+          disabled={!hasSelection}
+          title="Удалить выбранные блоки (Delete)"
         >
           Удалить
         </button>

@@ -1,5 +1,10 @@
-import { getBlockValue, type BoardMode } from "./boardModes";
-import { BLOCK_CONFIG, type BlockType, type BoardBlock } from "./blockTypes";
+import { getBlockValue, getExpectedColumn, type BoardMode } from "./boardModes";
+import {
+  BLOCK_CONFIG,
+  getBlockCount,
+  type BlockType,
+  type BoardBlock,
+} from "./blockTypes";
 
 export interface PlaceValueBreakdown {
   thousands: number;
@@ -13,7 +18,7 @@ export function calculateTotal(
   mode: BoardMode = "whole",
 ): number {
   return blocks.reduce(
-    (sum, block) => sum + getBlockValue(block.type, mode),
+    (sum, block) => sum + getBlockValue(block.type, mode) * getBlockCount(block),
     0,
   );
 }
@@ -79,6 +84,42 @@ export function countBlocksByColumn(
   return blocks.filter(
     (b) => b.column === column && (type ? b.type === type : true),
   ).length;
+}
+
+export function countBlocksInColumn(
+  blocks: BoardBlock[],
+  column: BoardBlock["column"],
+): number {
+  return countBlocksByColumn(blocks, column);
+}
+
+/** Count blocks for a column; in comparison mode workspace blocks count by type. */
+export function countBlocksForColumn(
+  blocks: BoardBlock[],
+  column: BoardBlock["column"],
+  mode: BoardMode = "whole",
+): number {
+  if (mode === "comparison") {
+    return blocks
+      .filter((b) => b.column === "free" && getExpectedColumn(b.type, mode) === column)
+      .reduce((sum, b) => sum + getBlockCount(b), 0);
+  }
+  return blocks
+    .filter((b) => b.column === column)
+    .reduce((sum, b) => sum + getBlockCount(b), 0);
+}
+
+export function getWorkspaceBlocksForColumn(
+  blocks: BoardBlock[],
+  column: BoardBlock["column"],
+  mode: BoardMode = "whole",
+): BoardBlock[] {
+  if (mode === "comparison") {
+    return blocks.filter(
+      (b) => b.column === "free" && getExpectedColumn(b.type, mode) === column,
+    );
+  }
+  return blocks.filter((b) => b.column === column);
 }
 
 export type CompareResult = "greater" | "less" | "equal";

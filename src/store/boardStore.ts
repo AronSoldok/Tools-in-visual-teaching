@@ -10,7 +10,7 @@ import {
   type ToolMode,
   createBlockId,
 } from "@/lib/blockTypes";
-import { composeAll, decomposeBlock } from "@/lib/regroup";
+import { composeAll, composeSelected, decomposeBlock } from "@/lib/regroup";
 import {
   columnForBlockType,
   getDefaultFreePosition,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/snap";
 
 const GRID_SIZE = 10;
+const DECOMPOSE_TYPES: BlockType[] = ["unit", "rod", "flat", "cube"];
 
 function emptyGrid(): boolean[][] {
   return Array.from({ length: GRID_SIZE }, () =>
@@ -28,7 +29,7 @@ function emptyGrid(): boolean[][] {
 
 interface BoardState {
   blocks: BoardBlock[];
-  selectedBlockId: string | null;
+  selectedBlockIds: string[];
   activeTool: ToolMode;
   boardMode: BoardMode;
   textAnnotations: TextAnnotation[];
@@ -43,7 +44,9 @@ interface BoardState {
   setWorkspaceSize: (width: number, height: number) => void;
   setActiveTool: (tool: ToolMode) => void;
   setBoardMode: (mode: BoardMode) => void;
-  setSelectedBlockId: (id: string | null) => void;
+  selectBlockExclusive: (id: string) => void;
+  addBlockToSelection: (id: string) => void;
+  clearSelection: () => void;
   setFullscreen: (value: boolean) => void;
 
   addBlockFromPalette: (
@@ -77,7 +80,7 @@ interface BoardState {
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   blocks: [],
-  selectedBlockId: null,
+  selectedBlockIds: [],
   activeTool: "select",
   boardMode: "whole",
   textAnnotations: [],
@@ -91,15 +94,21 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setChartSize: (width, height) => set({ chartWidth: width, chartHeight: height }),
   setWorkspaceSize: (width, height) =>
     set({ workspaceWidth: width, workspaceHeight: height }),
-  setActiveTool: (tool) => set({ activeTool: tool, selectedBlockId: null }),
+  setActiveTool: (tool) => set({ activeTool: tool, selectedBlockIds: [] }),
   setBoardMode: (mode) =>
     set({
       boardMode: mode,
       blocks: [],
-      selectedBlockId: null,
+      selectedBlockIds: [],
       gridCells: emptyGrid(),
     }),
-  setSelectedBlockId: (id) => set({ selectedBlockId: id }),
+  selectBlockExclusive: (id) => set({ selectedBlockIds: [id] }),
+  addBlockToSelection: (id) => {
+    const current = get().selectedBlockIds;
+    if (current.includes(id)) return;
+    set({ selectedBlockIds: [...current, id] });
+  },
+  clearSelection: () => set({ selectedBlockIds: [] }),
   setFullscreen: (value) => set({ isFullscreen: value }),
 
   getBlocksByGroup: (group) => {
@@ -145,7 +154,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     } else if (x >= 0 && y >= 0) {
       position = { x, y };
     } else {
-      const offsetX = targetGroup === "b" ? 400 : targetGroup === "a" ? 0 : 0;
+      const offsetX = targetGroup === "b" ? 400 : 0;
       position = getDefaultFreePosition(type, freeCount, offsetX);
     }
 
@@ -159,7 +168,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       invalid,
     };
 
-    set({ blocks: [...blocks, newBlock], selectedBlockId: newBlock.id });
+    set({ blocks: [...blocks, newBlock], selectedBlockIds: [newBlock.id] });
   },
 
   moveBlock: (id, x, y, column) => {
@@ -193,16 +202,20 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   removeBlock: (id) => {
-    const { blocks, selectedBlockId } = get();
+    const { blocks, selectedBlockIds } = get();
     set({
       blocks: blocks.filter((b) => b.id !== id),
-      selectedBlockId: selectedBlockId === id ? null : selectedBlockId,
+      selectedBlockIds: selectedBlockIds.filter((sid) => sid !== id),
     });
   },
 
   deleteSelectedBlock: () => {
-    const { selectedBlockId, removeBlock } = get();
-    if (selectedBlockId) removeBlock(selectedBlockId);
+    const { selectedBlockIds, blocks } = get();
+    const removeSet = new Set(selectedBlockIds);
+    set({
+      blocks: blocks.filter((b) => !removeSet.has(b.id)),
+      selectedBlockIds: [],
+    });
   },
 
   clearAnimating: () => {
@@ -212,7 +225,15 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   composeBlocks: (group) => {
-    const { blocks, chartWidth, chartHeight, boardMode } = get();
+    const { blocks, chartWidth, chartHeight, boardMode, selectedBlockIds } = get();
+
+    if (selectedBlockIds.length >= 2) {
+      const result = composeSelected(blocks, selectedBlockIds, chartWidth, chartHeight);
+      set({ blocks: result, selectedBlockIds: [] });
+      setTimeout(() => get().clearAnimating(), 400);
+      return;
+    }
+
     if (boardMode === "comparison" && group) {
       const groupBlocks = blocks.filter((b) => b.group === group);
       const other = blocks.filter((b) => b.group !== group);
@@ -226,15 +247,20 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   decomposeSelected: () => {
-    const { selectedBlockId, blocks, chartWidth, chartHeight } = get();
-    if (!selectedBlockId) return;
-    const result = decomposeBlock(
-      blocks,
-      selectedBlockId,
-      chartWidth,
-      chartHeight,
-    );
-    set({ blocks: result, selectedBlockId: null });
+    const { selectedBlockIds, blocks, chartWidth, chartHeight } = get();
+    if (selectedBlockIds.length === 0) return;
+
+    let result = blocks;
+    for (const id of selectedBlockIds) {
+      const block = result.find((b) => b.id === id);
+      if (
+        block &&
+        (DECOMPOSE_TYPES.includes(block.type) || block.partialFill)
+      ) {
+        result = decomposeBlock(result, id, chartWidth, chartHeight);
+      }
+    }
+    set({ blocks: result, selectedBlockIds: [] });
     setTimeout(() => get().clearAnimating(), 400);
   },
 
@@ -272,7 +298,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   clearAll: () => {
     set({
       blocks: [],
-      selectedBlockId: null,
+      selectedBlockIds: [],
       textAnnotations: [],
       gridCells: emptyGrid(),
     });

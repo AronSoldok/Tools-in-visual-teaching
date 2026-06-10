@@ -118,7 +118,7 @@ export function Board() {
       const overId = over ? String(over.id) : null;
 
       if (isPalette) {
-        if (overId && CHART_SELECTORS[overId]) {
+        if (overId && CHART_SELECTORS[overId] && boardMode !== "comparison") {
           const info = getChartDropInfo(
             event,
             CHART_SELECTORS[overId],
@@ -134,9 +134,16 @@ export function Board() {
             info?.column ?? undefined,
             group,
           );
-        } else if (overId && WORKSPACE_SELECTORS[overId]) {
-          const pos = getDropPosition(event, WORKSPACE_SELECTORS[overId], data.type);
-          const group = WORKSPACE_GROUPS[overId];
+        } else if (
+          overId &&
+          (WORKSPACE_SELECTORS[overId] ||
+            (boardMode === "comparison" && CHART_SELECTORS[overId]))
+        ) {
+          const wsId =
+            WORKSPACE_SELECTORS[overId] ? overId : CHART_GROUPS[overId] === "a" ? "workspace-a" : "workspace-b";
+          const selector = WORKSPACE_SELECTORS[wsId];
+          const pos = getDropPosition(event, selector, data.type);
+          const group = WORKSPACE_GROUPS[wsId] ?? CHART_GROUPS[overId];
           if (pos) {
             addBlockFromPalette(data.type, pos.x, pos.y, false, undefined, group);
           }
@@ -151,7 +158,7 @@ export function Board() {
       const newX = block.x + delta.x;
       const newY = block.y + delta.y;
 
-      if (overId && CHART_SELECTORS[overId]) {
+      if (boardMode !== "comparison" && overId && CHART_SELECTORS[overId]) {
         const column = detectColumn(newX, chartWidth);
         if (column) {
           moveBlock(blockId, newX, newY, column);
@@ -159,26 +166,41 @@ export function Board() {
         }
       }
 
-      if (overId && WORKSPACE_SELECTORS[overId]) {
+      const wsId =
+        overId && WORKSPACE_SELECTORS[overId]
+          ? overId
+          : overId && boardMode === "comparison" && CHART_SELECTORS[overId]
+            ? CHART_GROUPS[overId] === "a"
+              ? "workspace-a"
+              : "workspace-b"
+            : null;
+
+      if (wsId && WORKSPACE_SELECTORS[wsId]) {
         moveBlock(blockId, newX, newY, "free");
-      } else if (overId && CHART_SELECTORS[overId]) {
+      } else if (boardMode !== "comparison" && overId && CHART_SELECTORS[overId]) {
         moveBlock(blockId, newX, newY, block.column);
       } else {
         moveBlock(blockId, newX, newY, "free");
       }
     },
-    [activeTool, addBlockFromPalette, moveBlock, chartWidth],
+    [activeTool, addBlockFromPalette, moveBlock, chartWidth, boardMode],
   );
 
   const dndDisabled = activeTool !== "select";
+  const toolsActive =
+    activeTool === "pen" ||
+    activeTool === "highlighter" ||
+    activeTool === "text" ||
+    activeTool === "eraser";
 
   return (
     <DndContext
+      id="base-ten-board"
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={`board ${dndDisabled ? "dnd-disabled" : ""}`}>
+      <div className={`board ${dndDisabled ? "dnd-disabled" : ""} ${toolsActive ? "tools-active" : ""}`}>
         <Toolbar />
         <main className={`board-main ${boardMode === "comparison" ? "comparison-mode" : ""}`}>
           {boardMode === "comparison" ? (

@@ -1,0 +1,68 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "north_america",
+      "properties": { "id": "north_america", "name": "North America" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-170, 15], [-50, 15], [-50, 75], [-170, 75], [-170, 15]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "south_america",
+      "properties": { "id": "south_america", "name": "South America" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-82, -56], [-34, -56], [-34, 12], [-82, 12], [-82, -56]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "europe",
+      "properties": { "id": "europe", "name": "Europe" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-10, 36], [40, 36], [40, 72], [-10, 72], [-10, 36]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "africa",
+      "properties": { "id": "africa", "name": "Africa" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-18, -35], [52, -35], [52, 38], [-18, 38], [-18, -35]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "asia",
+      "properties": { "id": "asia", "name": "Asia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[40, 5], [150, 5], [150, 75], [40, 75], [40, 5]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "oceania",
+      "properties": { "id": "oceania", "name": "Oceania" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[110, -50], [180, -50], [180, 0], [110, 0], [110, -50]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "antarctica",
+      "properties": { "id": "antarctica", "name": "Antarctica" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[-180, -90], [180, -90], [180, -60], [-180, -60], [-180, -90]]]
+      }
+    }
+  ]
+}

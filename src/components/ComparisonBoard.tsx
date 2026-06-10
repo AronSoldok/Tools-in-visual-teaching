@@ -12,6 +12,7 @@ export function ComparisonBoard() {
           droppableId="chart-a"
           title="Число A"
           chartClassName="comparison-chart-a"
+          comparisonMode
         />
         <Workspace
           group="a"
@@ -26,6 +27,7 @@ export function ComparisonBoard() {
           droppableId="chart-b"
           title="Число B"
           chartClassName="comparison-chart-b"
+          comparisonMode
         />
         <Workspace
           group="b"

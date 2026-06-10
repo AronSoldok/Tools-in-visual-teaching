@@ -24,15 +24,15 @@ export function NumberDisplay() {
 
     return (
       <div className="number-display comparison-display" aria-live="polite">
-        <div className="comparison-value">
-          <span className="number-label">A:</span>
+        <div className="number-plaque comparison-value">
+          <span className="number-label">A</span>
           <span className="number-value">{formatNumber(totalA, boardMode)}</span>
         </div>
         <span className={`comparison-operator result-${result}`}>
           {compareLabel(result)}
         </span>
-        <div className="comparison-value">
-          <span className="number-label">B:</span>
+        <div className="number-plaque comparison-value">
+          <span className="number-label">B</span>
           <span className="number-value">{formatNumber(totalB, boardMode)}</span>
         </div>
       </div>
@@ -44,14 +44,23 @@ export function NumberDisplay() {
   const gridValue = gridFilled * 0.01;
   const displayTotal = boardMode === "decimal" ? total + gridValue : total;
   const breakdown = getPlaceValueBreakdown(displayTotal, boardMode);
+  const breakdownText = formatBreakdown(breakdown, boardMode);
 
   return (
     <div className="number-display" aria-live="polite">
-      <div className="number-primary">
-        <span className="number-label">Число:</span>
+      <div className="number-plaque">
+        <span className="number-label">Число</span>
         <span className="number-value">{formatNumber(displayTotal, boardMode)}</span>
       </div>
-      <span className="number-breakdown">{formatBreakdown(breakdown, boardMode)}</span>
+      {breakdownText !== "0" && (
+        <div className="number-chips">
+          {breakdownText.split(boardMode === "decimal" ? " + " : " ").map((chip) => (
+            <span key={chip} className="number-chip">
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { getBlockModeConfig } from "@/lib/boardModes";
@@ -13,7 +14,6 @@ interface DraggableBlockProps {
   selected?: boolean;
   invalid?: boolean;
   isPalette?: boolean;
-  onClick?: () => void;
 }
 
 export function DraggableBlock({
@@ -22,9 +22,13 @@ export function DraggableBlock({
   selected,
   invalid,
   isPalette,
-  onClick,
 }: DraggableBlockProps) {
   const boardMode = useBoardStore((s) => s.boardMode);
+  const block = useBoardStore((s) => s.blocks.find((b) => b.id === id));
+  const selectBlockExclusive = useBoardStore((s) => s.selectBlockExclusive);
+  const addBlockToSelection = useBoardStore((s) => s.addBlockToSelection);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
     data: { type, isPalette },
@@ -43,6 +47,26 @@ export function DraggableBlock({
     ? getBlockModeConfig(type, boardMode).labelRu
     : BLOCK_CONFIG[type].labelRu;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (isPalette) return;
+    e.stopPropagation();
+    if (clickTimerRef.current) return;
+    clickTimerRef.current = setTimeout(() => {
+      selectBlockExclusive(id);
+      clickTimerRef.current = null;
+    }, 250);
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (isPalette) return;
+    e.stopPropagation();
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+    addBlockToSelection(id);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -50,13 +74,17 @@ export function DraggableBlock({
       className={`draggable-block ${isPalette ? "palette-item" : "board-block"} ${selected ? "selected" : ""} ${invalid ? "invalid" : ""}`}
       {...listeners}
       {...attributes}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
-      }}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       title={invalid ? "Неверный разряд для этого блока" : label}
     >
-      <BlockSvg type={type} selected={selected} />
+      <BlockSvg
+        type={type}
+        selected={selected}
+        mini={isPalette}
+        partialFill={block?.partialFill}
+        partialShape={block?.partialShape}
+      />
     </div>
   );
 }

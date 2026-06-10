@@ -1,5 +1,5 @@
-import { Board } from "@/components/Board";
+import { AppShell } from "@/components/AppShell";
 
 export default function Home() {
-  return <Board />;
+  return <AppShell />;
 }
