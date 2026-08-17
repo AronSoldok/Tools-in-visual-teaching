@@ -59,24 +59,38 @@ export const useClockStore = create<ClockState>((set, get) => ({
   factsEnabled: true,
   lastFact: null,
 
-  setTime: (hours, minutes) =>
+  setTime: (hours, minutes) => {
+    const { target } = get();
     set({
       hours: ((hours % 24) + 24) % 24,
       minutes: ((minutes % 60) + 60) % 60,
-    }),
+      ...(target ? { feedback: null } : {}),
+    });
+  },
   setHours: (hours) => {
     if (get().hourLocked) return;
-    set({ hours: ((hours % 24) + 24) % 24 });
+    const { target } = get();
+    set({
+      hours: ((hours % 24) + 24) % 24,
+      ...(target ? { feedback: null } : {}),
+    });
   },
   setMinutes: (minutes) => {
     if (get().minuteLocked) return;
-    set({ minutes: ((minutes % 60) + 60) % 60 });
+    const { target } = get();
+    set({
+      minutes: ((minutes % 60) + 60) % 60,
+      ...(target ? { feedback: null } : {}),
+    });
   },
   setHourFromPad: (hourValue) => {
     if (get().hourLocked) return;
-    const { format, hours } = get();
+    const { format, hours, target } = get();
     const next = format === "12" ? apply12hHour(hourValue === 0 ? 12 : hourValue, hours) : hourValue;
-    set({ hours: ((next % 24) + 24) % 24 });
+    set({
+      hours: ((next % 24) + 24) % 24,
+      ...(target ? { feedback: null } : {}),
+    });
   },
   setFormat: (format) => set({ format, feedback: null }),
   toggleHourLock: () => set({ hourLocked: !get().hourLocked }),
