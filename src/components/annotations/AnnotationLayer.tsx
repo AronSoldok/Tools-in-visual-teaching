@@ -11,8 +11,6 @@ import {
 } from "@/lib/strokeErase";
 import { useBoardStore } from "@/store/boardStore";
 
-const ERASER_RADIUS = 16;
-
 export function AnnotationLayer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -25,10 +23,12 @@ export function AnnotationLayer() {
     y: number;
     value: string;
   } | null>(null);
+  const [eraserCursor, setEraserCursor] = useState<{ x: number; y: number } | null>(null);
 
   const activeTool = useBoardStore((s) => s.activeTool);
   const penColor = useAnnotationStore((s) => s.penColor);
   const markerColor = useAnnotationStore((s) => s.markerColor);
+  const eraserRadius = useAnnotationStore((s) => s.eraserRadius);
   const textAnnotations = useBoardStore((s) => s.textAnnotations);
   const addTextAnnotation = useBoardStore((s) => s.addTextAnnotation);
   const removeTextAnnotation = useBoardStore((s) => s.removeTextAnnotation);
@@ -106,7 +106,7 @@ export function AnnotationLayer() {
       const cRect = container.getBoundingClientRect();
       const cx = rect.left + rect.width / 2 - cRect.left;
       const cy = rect.top + rect.height / 2 - cRect.top;
-      if (Math.hypot(point.x - cx, point.y - cy) <= ERASER_RADIUS + rect.width / 4) {
+      if (Math.hypot(point.x - cx, point.y - cy) <= eraserRadius + rect.width / 4) {
         removeTextAnnotation(id);
       }
     });
@@ -114,7 +114,7 @@ export function AnnotationLayer() {
 
   const eraseAt = (point: StrokePoint) => {
     const before = strokesRef.current;
-    strokesRef.current = eraseStrokesAtPoint(before, point, ERASER_RADIUS);
+    strokesRef.current = eraseStrokesAtPoint(before, point, eraserRadius);
     if (strokesChanged(before, strokesRef.current)) {
       redraw();
     }
@@ -123,7 +123,7 @@ export function AnnotationLayer() {
 
   const eraseAlongPath = (from: StrokePoint, to: StrokePoint) => {
     const before = strokesRef.current;
-    strokesRef.current = eraseStrokesAlongPath(before, from, to, ERASER_RADIUS);
+    strokesRef.current = eraseStrokesAlongPath(before, from, to, eraserRadius);
     if (strokesChanged(before, strokesRef.current)) {
       redraw();
     }
@@ -164,6 +164,11 @@ export function AnnotationLayer() {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (activeTool === "eraser") {
       const point = getPoint(e);
+      setEraserCursor(point);
+      if (e.buttons === 0) {
+        lastEraserPointRef.current = null;
+        return;
+      }
       const last = lastEraserPointRef.current;
       if (last) {
         eraseAlongPath(last, point);
@@ -185,6 +190,11 @@ export function AnnotationLayer() {
       currentStrokeRef.current = null;
       redraw();
     }
+  };
+
+  const handlePointerLeave = () => {
+    setEraserCursor(null);
+    handlePointerUp();
   };
 
   const handleTextSubmit = () => {
@@ -217,8 +227,19 @@ export function AnnotationLayer() {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
       />
+      {activeTool === "eraser" && eraserCursor && (
+        <div
+          className="eraser-cursor"
+          style={{
+            left: eraserCursor.x,
+            top: eraserCursor.y,
+            width: eraserRadius * 2,
+            height: eraserRadius * 2,
+          }}
+        />
+      )}
       {textAnnotations.map((ann) => (
         <div
           key={ann.id}

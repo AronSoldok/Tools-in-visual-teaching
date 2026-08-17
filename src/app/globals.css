@@ -379,6 +379,34 @@ body {
   flex-wrap: wrap;
 }
 
+.eraser-size-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+}
+
+.eraser-size-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.eraser-size-picker input[type="range"] {
+  width: 88px;
+  accent-color: var(--primary);
+}
+
+.eraser-size-preview {
+  border-radius: 50%;
+  border: 2px solid var(--text);
+  background: rgba(61, 44, 30, 0.12);
+  flex-shrink: 0;
+  max-width: 28px;
+  max-height: 28px;
+}
+
 .color-swatch {
   width: 24px;
   height: 24px;
@@ -549,7 +577,11 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 4px;
-  opacity: 0.7;
+  z-index: 2;
+}
+
+.column-type-icon .palette-item {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .chart-column--thousands .column-type-icon {
@@ -881,6 +913,17 @@ body {
   touch-action: none;
 }
 
+.eraser-cursor {
+  position: absolute;
+  z-index: 25;
+  border: 2px solid #3d2c1e;
+  background: rgba(61, 44, 30, 0.12);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+
 .text-annotation {
   position: absolute;
   font-size: 1.25rem;
@@ -941,6 +984,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.number-plaque-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -1033,27 +1085,49 @@ body {
   cursor: not-allowed;
 }
 
-.number-edit-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(61, 44, 30, 0.25);
-}
-
 .number-edit-dialog {
   position: relative;
-  left: auto;
-  top: auto;
+  z-index: 40;
   flex-wrap: wrap;
-  max-width: 360px;
-  padding: 12px;
+  max-width: 280px;
+  padding: 8px;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
+}
+
+.app-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(61, 44, 30, 0.18);
+}
+
+.app-dialog {
+  width: min(360px, calc(100vw - 32px));
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.app-dialog-message {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .number-edit-error {
@@ -1245,6 +1319,42 @@ body {
   flex: 1;
 }
 
+.clock-result-card {
+  width: min(420px, 100%);
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+
+.clock-result-card p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.clock-result-card .clock-fact {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.clock-result-card.ok {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534;
+}
+
+.clock-result-card.bad {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
 .analog-clock {
   width: min(420px, 70vmin, 100%);
   height: auto;
@@ -1275,6 +1385,15 @@ body {
   font-weight: 800;
   fill: #6b3fa0;
   font-family: var(--font-sans);
+}
+
+.analog-clock-number-inner {
+  font-size: 22px;
+}
+
+.analog-clock-number-outer {
+  font-size: 16px;
+  fill: #c9682e;
 }
 
 .analog-hand {

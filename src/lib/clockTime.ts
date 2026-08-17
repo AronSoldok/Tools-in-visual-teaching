@@ -80,6 +80,23 @@ export function minutesFromAngle(deg: number): number {
   return Math.round(deg / 6) % 60;
 }
 
+export function nextTimeFromMinuteDrag(
+  hours: number,
+  prevMinutes: number,
+  nextMinutes: number,
+  hourLocked: boolean,
+): ClockTime {
+  let nextHours = hours;
+  if (!hourLocked && nextMinutes !== prevMinutes) {
+    if (prevMinutes > 45 && nextMinutes < 15) {
+      nextHours = (hours + 1) % 24;
+    } else if (prevMinutes < 15 && nextMinutes > 45) {
+      nextHours = (hours + 23) % 24;
+    }
+  }
+  return { hours: nextHours, minutes: nextMinutes };
+}
+
 export function hourLabel(hours: number): string {
   const n = Math.abs(hours);
   const mod10 = n % 10;

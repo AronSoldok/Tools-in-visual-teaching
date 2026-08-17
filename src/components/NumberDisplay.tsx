@@ -63,6 +63,17 @@ export function NumberDisplay() {
     if (editing) inputRef.current?.focus();
   }, [editing]);
 
+  useEffect(() => {
+    if (!editing) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const node = e.target as Node;
+      if (inputRef.current?.closest(".number-plaque-wrap")?.contains(node)) return;
+      setEditing(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [editing]);
+
   if (boardMode === "comparison") {
     const blocksA = blocks.filter((b) => b.group === "a");
     const blocksB = blocks.filter((b) => b.group === "b");
@@ -132,13 +143,47 @@ export function NumberDisplay() {
 
   return (
     <div className="number-display" aria-live="polite">
-      <div
-        className={`number-plaque ${hasTarget ? "number-plaque-target" : ""}`}
-        onContextMenu={openMenu}
-        title={boardMode === "whole" ? "Правый клик: вписать или убрать число" : undefined}
-      >
-        <span className="number-label">{hasTarget ? "Собери" : "Число"}</span>
-        <span className="number-value">{formatNumber(plaqueValue, boardMode)}</span>
+      <div className="number-plaque-wrap">
+        <div
+          className={`number-plaque ${hasTarget ? "number-plaque-target" : ""}`}
+          onContextMenu={openMenu}
+          title={boardMode === "whole" ? "Правый клик: вписать или убрать число" : undefined}
+        >
+          <span className="number-label">{hasTarget ? "Собери" : "Число"}</span>
+          <span className="number-value">{formatNumber(plaqueValue, boardMode)}</span>
+        </div>
+        {editing && (
+          <div
+            className="text-input-overlay number-edit-dialog"
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <input
+              ref={inputRef}
+              value={inputValue}
+              inputMode="numeric"
+              aria-label="Число от 1 до 9999"
+              placeholder={`${TARGET_MIN}–${TARGET_MAX}`}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setInputError(false);
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitEdit();
+                }
+                if (e.key === "Escape") setEditing(false);
+              }}
+            />
+            <button type="button" className="text-input-done" onClick={submitEdit}>
+              OK
+            </button>
+            {inputError && (
+              <span className="number-edit-error">Введите целое число от {TARGET_MIN} до {TARGET_MAX}</span>
+            )}
+          </div>
+        )}
       </div>
       {showLiveChips && (
         <div className="number-chips">
@@ -188,39 +233,6 @@ export function NumberDisplay() {
           >
             Убрать число
           </button>
-        </div>
-      )}
-      {editing && (
-        <div className="number-edit-overlay" onPointerDown={() => setEditing(false)}>
-          <div
-            className="text-input-overlay number-edit-dialog"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <input
-              ref={inputRef}
-              value={inputValue}
-              inputMode="numeric"
-              aria-label="Число от 1 до 9999"
-              placeholder={`${TARGET_MIN}–${TARGET_MAX}`}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                setInputError(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submitEdit();
-                }
-                if (e.key === "Escape") setEditing(false);
-              }}
-            />
-            <button type="button" className="text-input-done" onClick={submitEdit}>
-              OK
-            </button>
-            {inputError && (
-              <span className="number-edit-error">Введите целое число от {TARGET_MIN} до {TARGET_MAX}</span>
-            )}
-          </div>
         </div>
       )}
     </div>

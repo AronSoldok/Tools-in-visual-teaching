@@ -1,20 +1,32 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { hourAngle, minuteAngle, pointerAngleDeg, minutesFromAngle, analogHour } from "@/lib/clockTime";
+import {
+  hourAngle,
+  minuteAngle,
+  pointerAngleDeg,
+  minutesFromAngle,
+  nextTimeFromMinuteDrag,
+} from "@/lib/clockTime";
 import { useClockStore } from "@/store/clockStore";
 
 const SIZE = 400;
 const CX = 200;
 const CY = 200;
 
+function outerHourLabel(inner: number): number {
+  return inner === 12 ? 0 : inner + 12;
+}
+
 export function AnalogClock() {
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<"hour" | "minute" | null>(null);
   const hours = useClockStore((s) => s.hours);
   const minutes = useClockStore((s) => s.minutes);
+  const format = useClockStore((s) => s.format);
   const hourLocked = useClockStore((s) => s.hourLocked);
   const minuteLocked = useClockStore((s) => s.minuteLocked);
+  const is24 = format === "24";
 
   const hAngle = hourAngle(hours, minutes);
   const mAngle = minuteAngle(minutes);
@@ -30,7 +42,14 @@ export function AnalogClock() {
 
       if (hand === "minute") {
         if (state.minuteLocked) return;
-        state.setMinutes(minutesFromAngle(deg));
+        const nextMinutes = minutesFromAngle(deg);
+        const next = nextTimeFromMinuteDrag(
+          state.hours,
+          state.minutes,
+          nextMinutes,
+          state.hourLocked,
+        );
+        state.setTime(next.hours, next.minutes);
         return;
       }
 
@@ -65,7 +84,7 @@ export function AnalogClock() {
       className="analog-clock"
       viewBox={`0 0 ${SIZE} ${SIZE}`}
       role="img"
-      aria-label={`Циферблат: ${analogHour(hours) || 12} часов ${minutes} минут`}
+      aria-label={`Циферблат: ${hours} часов ${minutes} минут`}
     >
       <circle cx={CX} cy={CY} r={188} className="analog-clock-ring" />
       <circle cx={CX} cy={CY} r={168} className="analog-clock-face" />
@@ -88,14 +107,41 @@ export function AnalogClock() {
       {Array.from({ length: 12 }).map((_, i) => {
         const n = i + 1;
         const a = (n * 30 * Math.PI) / 180;
-        const x = CX + Math.sin(a) * 128;
-        const y = CY - Math.cos(a) * 128;
+        const innerDist = is24 ? 104 : 128;
+        const x = CX + Math.sin(a) * innerDist;
+        const y = CY - Math.cos(a) * innerDist;
         return (
-          <text key={n} x={x} y={y} className="analog-clock-number" textAnchor="middle" dominantBaseline="middle">
+          <text
+            key={n}
+            x={x}
+            y={y}
+            className={`analog-clock-number ${is24 ? "analog-clock-number-inner" : ""}`}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
             {n}
           </text>
         );
       })}
+      {is24 &&
+        Array.from({ length: 12 }).map((_, i) => {
+          const n = i + 1;
+          const a = (n * 30 * Math.PI) / 180;
+          const x = CX + Math.sin(a) * 142;
+          const y = CY - Math.cos(a) * 142;
+          return (
+            <text
+              key={`outer-${n}`}
+              x={x}
+              y={y}
+              className="analog-clock-number analog-clock-number-outer"
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {outerHourLabel(n)}
+            </text>
+          );
+        })}
       <g
         className={`analog-hand analog-hand-hour ${hourLocked ? "locked" : ""}`}
         transform={`rotate(${hAngle} ${CX} ${CY})`}

@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { BOARD_MODE_LABELS, type BoardMode } from "@/lib/boardModes";
 import { exportBoardToPng } from "@/lib/exportBoard";
 import { BlockPalette } from "./BlockPalette";
 import { ColorPicker } from "./ColorPicker";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { EraserSizePicker } from "./EraserSizePicker";
 import { clearAnnotationCanvas } from "./annotations/AnnotationLayer";
 import { useBoardStore } from "@/store/boardStore";
 import type { ToolMode } from "@/lib/blockTypes";
@@ -39,6 +41,13 @@ export function Toolbar() {
 
   const hasSelection = selectedBlockIds.length > 0;
   const hasTarget = boardMode === "whole" && targetNumber !== null;
+  const [dialog, setDialog] = useState<
+    | { kind: "clearDrawings" }
+    | { kind: "clearAll" }
+    | { kind: "mode"; mode: BoardMode }
+    | { kind: "alert"; message: string }
+    | null
+  >(null);
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -54,26 +63,14 @@ export function Toolbar() {
     }
   }, [setFullscreen]);
 
-  const handleClearDrawings = () => {
-    if (window.confirm("Очистить все рисунки и текст?")) {
-      clearDrawings();
-      clearAnnotationCanvas();
-    }
-  };
+  const handleClearDrawings = () => setDialog({ kind: "clearDrawings" });
 
-  const handleClearAll = () => {
-    if (window.confirm("Очистить всё: блоки, рисунки и текст?")) {
-      clearAll();
-      clearAnnotationCanvas();
-    }
-  };
+  const handleClearAll = () => setDialog({ kind: "clearAll" });
 
   const handleModeChange = (mode: BoardMode) => {
     if (mode === boardMode) return;
-    if (
-      useBoardStore.getState().blocks.length > 0 &&
-      !window.confirm("Смена режима очистит доску. Продолжить?")
-    ) {
+    if (useBoardStore.getState().blocks.length > 0) {
+      setDialog({ kind: "mode", mode });
       return;
     }
     setBoardMode(mode);
@@ -84,9 +81,37 @@ export function Toolbar() {
     try {
       await exportBoardToPng();
     } catch {
-      window.alert("Не удалось экспортировать изображение.");
+      setDialog({ kind: "alert", message: "Не удалось экспортировать изображение." });
     }
   };
+
+  const closeDialog = () => setDialog(null);
+
+  const confirmDialog = () => {
+    if (!dialog) return;
+    if (dialog.kind === "clearDrawings") {
+      clearDrawings();
+      clearAnnotationCanvas();
+    } else if (dialog.kind === "clearAll") {
+      clearAll();
+      clearAnnotationCanvas();
+    } else if (dialog.kind === "mode") {
+      setBoardMode(dialog.mode);
+      clearAnnotationCanvas();
+    }
+    closeDialog();
+  };
+
+  const dialogMessage =
+    dialog?.kind === "clearDrawings"
+      ? "Очистить все рисунки и текст?"
+      : dialog?.kind === "clearAll"
+        ? "Очистить всё: блоки, рисунки и текст?"
+        : dialog?.kind === "mode"
+          ? "Смена режима очистит доску. Продолжить?"
+          : dialog?.kind === "alert"
+            ? dialog.message
+            : "";
 
   return (
     <header className="toolbar">
@@ -131,6 +156,7 @@ export function Toolbar() {
             </button>
           ))}
           <ColorPicker activeTool={activeTool} />
+          <EraserSizePicker activeTool={activeTool} />
         </div>
       </div>
 
@@ -223,6 +249,14 @@ export function Toolbar() {
           {isFullscreen ? "Выйти" : "Экран"}
         </button>
       </div>
+      <ConfirmDialog
+        open={dialog !== null}
+        message={dialogMessage}
+        confirmLabel={dialog?.kind === "alert" ? "OK" : "Да"}
+        hideCancel={dialog?.kind === "alert"}
+        onConfirm={confirmDialog}
+        onCancel={closeDialog}
+      />
     </header>
   );
 }

@@ -98,7 +98,11 @@ export function PlaceValueChart({
               </div>
               {!isComparison && (
                 <div className="column-type-icon" title={`Тип: ${theme.valueLabel}`}>
-                  <BlockSvg type={theme.blockType} mini className="column-block-icon" />
+                  <DraggableBlock
+                    id={`palette-chart-${theme.blockType}`}
+                    type={theme.blockType}
+                    isPalette
+                  />
                   <span className="column-value-label">{theme.valueLabel}</span>
                 </div>
               )}

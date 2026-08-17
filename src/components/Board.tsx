@@ -84,7 +84,13 @@ export function Board() {
       if (activeTool !== "select") return;
       if (e.key === "Delete" || e.key === "Backspace") {
         const target = e.target as HTMLElement;
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        if (
+          target.closest("input, textarea, select") ||
+          target.isContentEditable ||
+          target.closest("[contenteditable='true']")
+        ) {
+          return;
+        }
         e.preventDefault();
         deleteSelectedBlock();
       }

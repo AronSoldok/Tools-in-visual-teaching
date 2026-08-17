@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { ColorPicker } from "@/components/ColorPicker";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EraserSizePicker } from "@/components/EraserSizePicker";
 import type { ToolMode } from "@/lib/blockTypes";
 import { useMapStore, type MapStyle, type MapViewMode } from "@/store/mapStore";
 import { clearMapAnnotationCanvas } from "./MapAnnotationLayer";
@@ -25,19 +28,10 @@ export function MapToolbar() {
   const zoom = useMapStore((s) => s.zoom);
   const setZoom = useMapStore((s) => s.setZoom);
   const resetView = useMapStore((s) => s.resetView);
+  const [dialog, setDialog] = useState<"drawings" | "pieces" | null>(null);
 
-  const handleClearDrawings = () => {
-    if (window.confirm("Очистить рисунки на карте?")) {
-      clearDrawings();
-      clearMapAnnotationCanvas();
-    }
-  };
-
-  const handleResetPieces = () => {
-    if (window.confirm("Вернуть все части карты на место?")) {
-      resetPieces();
-    }
-  };
+  const handleClearDrawings = () => setDialog("drawings");
+  const handleResetPieces = () => setDialog("pieces");
 
   return (
     <header className="toolbar map-toolbar">
@@ -92,6 +86,7 @@ export function MapToolbar() {
             </button>
           ))}
           <ColorPicker activeTool={activeTool} />
+          <EraserSizePicker activeTool={activeTool} />
         </div>
       </div>
 
@@ -144,6 +139,24 @@ export function MapToolbar() {
           </button>
         )}
       </div>
+      <ConfirmDialog
+        open={dialog !== null}
+        message={
+          dialog === "drawings"
+            ? "Очистить рисунки на карте?"
+            : "Вернуть все части карты на место?"
+        }
+        onConfirm={() => {
+          if (dialog === "drawings") {
+            clearDrawings();
+            clearMapAnnotationCanvas();
+          } else if (dialog === "pieces") {
+            resetPieces();
+          }
+          setDialog(null);
+        }}
+        onCancel={() => setDialog(null)}
+      />
     </header>
   );
 }

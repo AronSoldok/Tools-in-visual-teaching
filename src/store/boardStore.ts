@@ -323,7 +323,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     });
   },
 
-  setTargetNumber: (value) => set({ targetNumber: value, feedback: null }),
+  setTargetNumber: (value) =>
+    set({ targetNumber: value, feedback: null, blocks: [], selectedBlockIds: [] }),
   clearTarget: () => set({ targetNumber: null, feedback: null }),
   spawnRandomNumber: () => {
     if (get().boardMode !== "whole") return;
