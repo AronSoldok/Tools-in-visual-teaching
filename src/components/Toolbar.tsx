@@ -32,8 +32,13 @@ export function Toolbar() {
   const clearDrawings = useBoardStore((s) => s.clearDrawings);
   const isFullscreen = useBoardStore((s) => s.isFullscreen);
   const setFullscreen = useBoardStore((s) => s.setFullscreen);
+  const spawnRandomNumber = useBoardStore((s) => s.spawnRandomNumber);
+  const confirmTarget = useBoardStore((s) => s.confirmTarget);
+  const clearTarget = useBoardStore((s) => s.clearTarget);
+  const targetNumber = useBoardStore((s) => s.targetNumber);
 
   const hasSelection = selectedBlockIds.length > 0;
+  const hasTarget = boardMode === "whole" && targetNumber !== null;
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -130,6 +135,35 @@ export function Toolbar() {
       </div>
 
       <div className="toolbar-section toolbar-actions">
+        <button
+          type="button"
+          className="action-btn"
+          onClick={() => spawnRandomNumber()}
+          disabled={boardMode !== "whole"}
+          title="Загадать случайное число от 1 до 9999"
+        >
+          Случайное число
+        </button>
+        {hasTarget && (
+          <>
+            <button
+              type="button"
+              className="action-btn action-btn-confirm"
+              onClick={() => confirmTarget()}
+              title="Проверить, совпадает ли сумма блоков с числом"
+            >
+              Подтвердить
+            </button>
+            <button
+              type="button"
+              className="action-btn"
+              onClick={() => clearTarget()}
+              title="Убрать задание и кнопки проверки"
+            >
+              Отменить
+            </button>
+          </>
+        )}
         <button
           type="button"
           className="action-btn"

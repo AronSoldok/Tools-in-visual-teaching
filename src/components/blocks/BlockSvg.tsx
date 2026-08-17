@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BLOCK_CONFIG, type BlockType } from "@/lib/blockTypes";
 
 interface BlockSvgProps {
@@ -56,14 +57,90 @@ function Square2D({
   );
 }
 
-/** Isometric slab for thousand-block stack only */
-function IsoSlab({
+type Pt = [number, number];
+
+function gridPoint(origin: Pt, uCorner: Pt, vCorner: Pt, i: number, j: number, n: number): Pt {
+  const t = i / n;
+  const s = j / n;
+  return [
+    origin[0] + (uCorner[0] - origin[0]) * t + (vCorner[0] - origin[0]) * s,
+    origin[1] + (uCorner[1] - origin[1]) * t + (vCorner[1] - origin[1]) * s,
+  ];
+}
+
+function FaceGrid({
+  origin,
+  uCorner,
+  vCorner,
+  n,
+  stroke,
+  strokeWidth,
+}: {
+  origin: Pt;
+  uCorner: Pt;
+  vCorner: Pt;
+  n: number;
+  stroke: string;
+  strokeWidth: number;
+}) {
+  const lines: ReactNode[] = [];
+  for (let i = 0; i <= n; i++) {
+    const a = gridPoint(origin, uCorner, vCorner, i, 0, n);
+    const b = gridPoint(origin, uCorner, vCorner, i, n, n);
+    lines.push(
+      <line
+        key={`u${i}`}
+        x1={a[0]}
+        y1={a[1]}
+        x2={b[0]}
+        y2={b[1]}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />,
+    );
+  }
+  for (let j = 1; j < n; j++) {
+    const a = gridPoint(origin, uCorner, vCorner, 0, j, n);
+    const b = gridPoint(origin, uCorner, vCorner, n, j, n);
+    lines.push(
+      <line
+        key={`v${j}`}
+        x1={a[0]}
+        y1={a[1]}
+        x2={b[0]}
+        y2={b[1]}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        vectorEffect="non-scaling-stroke"
+      />,
+    );
+  }
+  return <g pointerEvents="none">{lines}</g>;
+}
+
+function isoCorners(x: number, y: number, size: number) {
+  const w = size;
+  const h = size * 0.5;
+  const cx = x + w / 2;
+  const top: Pt = [cx, y];
+  const right: Pt = [x + w, y + h * 0.5];
+  const bottom: Pt = [cx, y + h];
+  const left: Pt = [x, y + h * 0.5];
+  const rightBottom: Pt = [x + w, y + h * 1.5];
+  const bottomTip: Pt = [cx, y + h * 2];
+  const leftBottom: Pt = [x, y + h * 1.5];
+  return { top, right, bottom, left, rightBottom, bottomTip, leftBottom, w, h };
+}
+
+function IsoFaces({
   x,
   y,
   size,
   color,
   border,
   ghost,
+  divisions = 10,
 }: {
   x: number;
   y: number;
@@ -71,24 +148,48 @@ function IsoSlab({
   color: string;
   border: string;
   ghost?: boolean;
+  divisions?: number;
 }) {
-  const w = size;
-  const h = size * 0.5;
-  const cx = x + w / 2;
-
-  const top = `${cx},${y} ${x + w},${y + h * 0.5} ${cx},${y + h} ${x},${y + h * 0.5}`;
-  const right = `${cx},${y + h} ${x + w},${y + h * 0.5} ${x + w},${y + h * 1.5} ${cx},${y + h * 2}`;
-  const left = `${x},${y + h * 0.5} ${cx},${y + h} ${cx},${y + h * 2} ${x},${y + h * 1.5}`;
-
+  const c = isoCorners(x, y, size);
   const fill = ghost ? "rgba(210, 210, 210, 0.35)" : color;
   const stroke = ghost ? "#94a3b8" : border;
   const sw = ghost ? 0.8 : 1.2;
+  const gridStroke = ghost ? "#94a3b8" : darken(border, 0.08);
+  const gridSw = ghost ? 0.35 : Math.max(0.4, size / 140);
+
+  const leftPts = `${c.left} ${c.bottom} ${c.bottomTip} ${c.leftBottom}`;
+  const rightPts = `${c.bottom} ${c.right} ${c.rightBottom} ${c.bottomTip}`;
+  const topPts = `${c.top} ${c.right} ${c.bottom} ${c.left}`;
 
   return (
     <g className={ghost ? "block-partial-ghost" : ""}>
-      <polygon points={left} fill={darken(fill, ghost ? 0 : 0.28)} stroke={stroke} strokeWidth={sw} />
-      <polygon points={right} fill={darken(fill, ghost ? 0 : 0.14)} stroke={stroke} strokeWidth={sw} />
-      <polygon points={top} fill={fill} stroke={stroke} strokeWidth={sw} />
+      <polygon points={leftPts} fill={darken(fill, ghost ? 0 : 0.28)} stroke={stroke} strokeWidth={sw} />
+      <polygon points={rightPts} fill={darken(fill, ghost ? 0 : 0.14)} stroke={stroke} strokeWidth={sw} />
+      <polygon points={topPts} fill={fill} stroke={stroke} strokeWidth={sw} />
+      <FaceGrid
+        origin={c.left}
+        uCorner={c.bottom}
+        vCorner={c.leftBottom}
+        n={divisions}
+        stroke={gridStroke}
+        strokeWidth={gridSw}
+      />
+      <FaceGrid
+        origin={c.bottom}
+        uCorner={c.right}
+        vCorner={c.bottomTip}
+        n={divisions}
+        stroke={gridStroke}
+        strokeWidth={gridSw}
+      />
+      <FaceGrid
+        origin={c.left}
+        uCorner={c.top}
+        vCorner={c.bottom}
+        n={divisions}
+        stroke={gridStroke}
+        strokeWidth={gridSw}
+      />
     </g>
   );
 }
@@ -206,7 +307,7 @@ function CubeStackView({
   selected?: boolean;
 }) {
   const layers = 10;
-  const size = width * 0.85;
+  const size = width * 0.72;
   const slabDepth = size;
   const gap = layers > 1 ? (height - slabDepth) / (layers - 1) : 0;
 
@@ -216,7 +317,7 @@ function CubeStackView({
         const y = height - slabDepth - layer * gap;
         const ghost = layer >= filledLayers;
         return (
-          <IsoSlab
+          <IsoFaces
             key={layer}
             x={(width - size) / 2}
             y={y}
@@ -227,6 +328,31 @@ function CubeStackView({
           />
         );
       })}
+      {selected && <SelectionRect width={width} height={height} />}
+    </g>
+  );
+}
+
+function IsoCubeView({
+  width,
+  height,
+  color,
+  border,
+  selected,
+}: {
+  width: number;
+  height: number;
+  color: string;
+  border: string;
+  selected?: boolean;
+}) {
+  const size = Math.min(width, height) * 0.92;
+  const x = (width - size) / 2;
+  const y = (height - size) / 2;
+
+  return (
+    <g>
+      <IsoFaces x={x} y={y} size={size} color={color} border={border} />
       {selected && <SelectionRect width={width} height={height} />}
     </g>
   );
@@ -318,7 +444,7 @@ export function BlockSvg({
 
   return (
     <svg viewBox={`0 0 ${displayW} ${displayH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
-      <CubeStackView width={displayW} height={displayH} color={color} border={border} selected={selected} />
+      <IsoCubeView width={displayW} height={displayH} color={color} border={border} selected={selected} />
     </svg>
   );
 }

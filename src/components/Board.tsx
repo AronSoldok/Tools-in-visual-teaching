@@ -23,6 +23,7 @@ import { ComparisonBoard } from "./ComparisonBoard";
 import { NumberDisplay } from "./NumberDisplay";
 import { AnnotationLayer } from "./annotations/AnnotationLayer";
 import { BlockSvg } from "./blocks/BlockSvg";
+import { ChallengeOverlay } from "./ChallengeOverlay";
 
 const CHART_SELECTORS: Record<string, string> = {
   "place-value-chart": ".place-value-chart",
@@ -223,6 +224,7 @@ export function Board() {
         <footer className="board-footer">
           <NumberDisplay />
         </footer>
+        <ChallengeOverlay />
       </div>
 
       <DragOverlay dropAnimation={null}>

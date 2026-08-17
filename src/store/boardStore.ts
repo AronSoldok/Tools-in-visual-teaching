@@ -12,6 +12,10 @@ import {
 } from "@/lib/blockTypes";
 import { composeAll, composeSelected, decomposeBlock } from "@/lib/regroup";
 import {
+  calculateTotal,
+  randomWholeNumber,
+} from "@/lib/placeValue";
+import {
   columnForBlockType,
   getDefaultFreePosition,
   isValidBlockColumn,
@@ -20,6 +24,8 @@ import {
 
 const GRID_SIZE = 10;
 const DECOMPOSE_TYPES: BlockType[] = ["unit", "rod", "flat", "cube"];
+
+export type ChallengeFeedback = { correct: boolean };
 
 function emptyGrid(): boolean[][] {
   return Array.from({ length: GRID_SIZE }, () =>
@@ -39,6 +45,8 @@ interface BoardState {
   workspaceWidth: number;
   workspaceHeight: number;
   isFullscreen: boolean;
+  targetNumber: number | null;
+  feedback: ChallengeFeedback | null;
 
   setChartSize: (width: number, height: number) => void;
   setWorkspaceSize: (width: number, height: number) => void;
@@ -75,6 +83,11 @@ interface BoardState {
   clearDrawings: () => void;
   clearAll: () => void;
 
+  setTargetNumber: (value: number) => void;
+  clearTarget: () => void;
+  spawnRandomNumber: () => void;
+  confirmTarget: () => void;
+
   getBlocksByGroup: (group: BlockGroup) => BoardBlock[];
 }
 
@@ -90,6 +103,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   workspaceWidth: 800,
   workspaceHeight: 500,
   isFullscreen: false,
+  targetNumber: null,
+  feedback: null,
 
   setChartSize: (width, height) => set({ chartWidth: width, chartHeight: height }),
   setWorkspaceSize: (width, height) =>
@@ -101,6 +116,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       blocks: [],
       selectedBlockIds: [],
       gridCells: emptyGrid(),
+      targetNumber: null,
+      feedback: null,
     }),
   selectBlockExclusive: (id) => set({ selectedBlockIds: [id] }),
   addBlockToSelection: (id) => {
@@ -301,6 +318,21 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       selectedBlockIds: [],
       textAnnotations: [],
       gridCells: emptyGrid(),
+      targetNumber: null,
+      feedback: null,
     });
+  },
+
+  setTargetNumber: (value) => set({ targetNumber: value, feedback: null }),
+  clearTarget: () => set({ targetNumber: null, feedback: null }),
+  spawnRandomNumber: () => {
+    if (get().boardMode !== "whole") return;
+    set({ targetNumber: randomWholeNumber(), feedback: null });
+  },
+  confirmTarget: () => {
+    const { targetNumber, blocks, boardMode } = get();
+    if (targetNumber === null || boardMode !== "whole") return;
+    const total = calculateTotal(blocks, boardMode);
+    set({ feedback: { correct: total === targetNumber } });
   },
 }));
