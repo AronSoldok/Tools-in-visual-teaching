@@ -22,9 +22,10 @@ export function ClockApp() {
         <div className="clock-stage-center">
           <ClockDigital />
           <AnalogClock />
-          {feedback && (
-            <div className={`clock-result-card ${feedback.correct ? "ok" : "bad"}`}>
-              <p className="clock-result-title">{feedback.correct ? "Верно!" : "Неверно"}</p>
+          {feedback && !feedback.correct && (
+            <div className="clock-result-card bad">
+              <p className="clock-result-title">Неверно</p>
+              <p className="clock-result-retry">Попробуй ещё.</p>
               {feedback.fact && <p className="clock-fact">{feedback.fact}</p>}
             </div>
           )}

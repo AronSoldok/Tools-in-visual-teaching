@@ -1340,6 +1340,12 @@ body {
   font-weight: 800;
 }
 
+.clock-result-retry {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
 .clock-result-card .clock-fact {
   margin: 10px 0 0;
   font-size: 1.1rem;

@@ -88,13 +88,16 @@ export const useClockStore = create<ClockState>((set, get) => ({
   },
   clearTarget: () => set({ target: null, feedback: null }),
   confirmTarget: () => {
-    const { target, hours, minutes, factsEnabled, lastFact } = get();
+    const { target, hours, minutes, lastFact } = get();
     if (!target) return;
     const correct = analogEqual({ hours, minutes }, target);
-    const fact = factsEnabled ? pickClockFact(lastFact) : null;
+    if (correct) {
+      set({ target: null, feedback: null });
+      return;
+    }
+    const fact = pickClockFact(lastFact);
     set({
-      target: null,
-      feedback: { correct, fact },
+      feedback: { correct: false, fact },
       lastFact: fact,
     });
   },
