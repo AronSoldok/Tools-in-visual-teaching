@@ -1301,11 +1301,12 @@ body {
 
 .clock-stage {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
   gap: 16px;
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: min-content;
+  overflow: visible;
   padding: 16px 20px 8px;
 }
 
@@ -1316,31 +1317,35 @@ body {
   justify-content: center;
   gap: 12px;
   min-width: 0;
+  min-height: min-content;
+  overflow: visible;
   flex: 1;
 }
 
 .clock-result-card {
   width: min(420px, 100%);
+  flex-shrink: 0;
   padding: 14px 18px;
   border-radius: var(--radius-lg);
   border: 2px solid var(--border);
   background: var(--surface);
   box-shadow: var(--shadow-soft);
   text-align: center;
+  z-index: 2;
 }
 
-.clock-result-card p {
+.clock-result-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 800;
 }
 
 .clock-result-card .clock-fact {
-  margin-top: 8px;
-  font-size: 1.05rem;
+  margin: 10px 0 0;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .clock-result-card.ok {
@@ -1358,8 +1363,13 @@ body {
 .analog-clock {
   width: min(420px, 70vmin, 100%);
   height: auto;
+  flex-shrink: 1;
   touch-action: none;
   user-select: none;
+}
+
+.clock-stage-center:has(.clock-result-card) .analog-clock {
+  width: min(340px, 52vmin, 100%);
 }
 
 .analog-clock-ring {

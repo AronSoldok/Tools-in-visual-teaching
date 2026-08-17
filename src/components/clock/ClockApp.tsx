@@ -24,7 +24,7 @@ export function ClockApp() {
           <AnalogClock />
           {feedback && (
             <div className={`clock-result-card ${feedback.correct ? "ok" : "bad"}`}>
-              <p>{feedback.correct ? "Верно!" : "Пока неверно. Попробуй ещё."}</p>
+              <p className="clock-result-title">{feedback.correct ? "Верно!" : "Неверно"}</p>
               {feedback.fact && <p className="clock-fact">{feedback.fact}</p>}
             </div>
           )}
