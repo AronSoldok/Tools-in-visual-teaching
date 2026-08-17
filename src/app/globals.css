@@ -1557,6 +1557,10 @@ body {
   font-weight: 700;
 }
 
+.clock-feedback .clock-result-title {
+  font-size: 1.15rem;
+}
+
 .clock-feedback.ok {
   background: #dcfce7;
   color: #166534;

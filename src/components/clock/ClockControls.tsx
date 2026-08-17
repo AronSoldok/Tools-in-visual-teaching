@@ -8,6 +8,7 @@ export function ClockControls() {
   const minuteLocked = useClockStore((s) => s.minuteLocked);
   const digitalVisible = useClockStore((s) => s.digitalVisible);
   const target = useClockStore((s) => s.target);
+  const feedback = useClockStore((s) => s.feedback);
   const factsEnabled = useClockStore((s) => s.factsEnabled);
   const setFormat = useClockStore((s) => s.setFormat);
   const toggleHourLock = useClockStore((s) => s.toggleHourLock);
@@ -66,6 +67,12 @@ export function ClockControls() {
       <button type="button" className="clock-facts-toggle" onClick={toggleFacts}>
         {factsEnabled ? "Факты выкл." : "Факты вкл."}
       </button>
+      {feedback?.correct && (
+        <div className="clock-feedback ok" role="status">
+          <p className="clock-result-title">Верно!</p>
+          {feedback.fact && <p className="clock-fact">{feedback.fact}</p>}
+        </div>
+      )}
     </div>
   );
 }
