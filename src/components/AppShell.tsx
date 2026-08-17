@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { AppSidebar } from "./AppSidebar";
 import { Board } from "./Board";
+import { ClockApp } from "./clock/ClockApp";
 import { useAppStore } from "@/store/appStore";
 
 const MapApp = dynamic(() => import("./map/MapApp").then((m) => m.MapApp), {
@@ -17,7 +18,13 @@ export function AppShell() {
     <div className="app-shell">
       <AppSidebar />
       <div className="app-content">
-        {activeApp === "blocks" ? <Board /> : <MapApp />}
+        {activeApp === "blocks" ? (
+          <Board />
+        ) : activeApp === "map" ? (
+          <MapApp />
+        ) : (
+          <ClockApp />
+        )}
       </div>
     </div>
   );

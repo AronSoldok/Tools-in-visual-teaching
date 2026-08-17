@@ -2,9 +2,10 @@
 
 import { useAppStore, type ActiveApp } from "@/store/appStore";
 
-const APPS: { id: ActiveApp; label: string; icon: string }[] = [
-  { id: "blocks", label: "Блоки", icon: "▦" },
-  { id: "map", label: "Карта", icon: "🌍" },
+const APPS: { id: ActiveApp; label: string; icon: string; title: string }[] = [
+  { id: "blocks", label: "Блоки", icon: "▦", title: "Блоки" },
+  { id: "map", label: "Карта", icon: "🌍", title: "Глобус и карта" },
+  { id: "clock", label: "Часы", icon: "🕒", title: "Интерактивные часы" },
 ];
 
 export function AppSidebar() {
@@ -19,7 +20,7 @@ export function AppSidebar() {
           type="button"
           className={`app-sidebar-btn ${activeApp === app.id ? "active" : ""}`}
           onClick={() => setActiveApp(app.id)}
-          title={app.id === "map" ? "Глобус и карта" : "Блоки"}
+          title={app.title}
           aria-pressed={activeApp === app.id}
         >
           <span className="app-sidebar-icon">{app.icon}</span>

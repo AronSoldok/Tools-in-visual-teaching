@@ -1215,3 +1215,263 @@ body {
     display: none;
   }
 }
+
+/* Clock */
+.clock-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--workspace-bg);
+  overflow: auto;
+}
+
+.clock-stage {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  padding: 16px 20px 8px;
+}
+
+.clock-stage-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.analog-clock {
+  width: min(420px, 70vmin, 100%);
+  height: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.analog-clock-ring {
+  fill: var(--primary-soft);
+  stroke: var(--primary);
+  stroke-width: 16;
+}
+
+.analog-clock-face {
+  fill: var(--surface);
+}
+
+.analog-clock-hour-dot {
+  fill: #6bc96b;
+}
+
+.analog-clock-minute-dot {
+  fill: #c4a574;
+}
+
+.analog-clock-number {
+  font-size: 28px;
+  font-weight: 800;
+  fill: #6b3fa0;
+  font-family: var(--font-sans);
+}
+
+.analog-hand {
+  cursor: grab;
+  touch-action: none;
+}
+
+.analog-hand:active {
+  cursor: grabbing;
+}
+
+.analog-hand.locked {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.analog-hand-hour .analog-hand-shape {
+  fill: #3b82c4;
+}
+
+.analog-hand-minute .analog-hand-shape {
+  fill: #dc4a4a;
+}
+
+.analog-clock-cap {
+  fill: #f5d547;
+  stroke: #c9a800;
+  stroke-width: 2;
+}
+
+.clock-digital-input {
+  min-width: 160px;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 8px 24px;
+  border: 2px solid var(--primary);
+  border-radius: 999px;
+  background: #6b3fa0;
+  color: white;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-digital-placeholder {
+  height: 56px;
+}
+
+.clock-target {
+  margin: 0;
+  padding: 8px 24px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  border: 2px solid var(--primary);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.clock-pad {
+  display: flex;
+  gap: 8px;
+  overflow: auto;
+}
+
+.clock-pad-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clock-pad-btn {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clock-pad-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.clock-pad-btn.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.clock-pad-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.clock-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  background: var(--surface);
+  border-top: 2px solid var(--border);
+}
+
+.clock-format-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.clock-lock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.clock-lock input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.clock-feedback {
+  flex-basis: 100%;
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-weight: 700;
+}
+
+.clock-feedback.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.clock-feedback.bad {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.clock-fact {
+  margin: 6px 0 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.clock-facts-toggle {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.clock-facts-toggle:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .clock-stage {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .clock-pad {
+    max-height: 180px;
+  }
+
+  .clock-pad-hours,
+  .clock-pad-minutes {
+    flex-direction: row;
+  }
+
+  .clock-pad-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

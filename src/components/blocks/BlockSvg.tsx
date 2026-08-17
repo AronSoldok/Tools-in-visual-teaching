@@ -68,55 +68,67 @@ function gridPoint(origin: Pt, uCorner: Pt, vCorner: Pt, i: number, j: number, n
   ];
 }
 
-function FaceGrid({
+function isoCellPoints(
+  origin: Pt,
+  uCorner: Pt,
+  vCorner: Pt,
+  i: number,
+  j: number,
+  n: number,
+  inset: number,
+): string {
+  const p00 = gridPoint(origin, uCorner, vCorner, i, j, n);
+  const p10 = gridPoint(origin, uCorner, vCorner, i + 1, j, n);
+  const p11 = gridPoint(origin, uCorner, vCorner, i + 1, j + 1, n);
+  const p01 = gridPoint(origin, uCorner, vCorner, i, j + 1, n);
+  const cx = (p00[0] + p10[0] + p11[0] + p01[0]) / 4;
+  const cy = (p00[1] + p10[1] + p11[1] + p01[1]) / 4;
+  const shrink = (p: Pt): Pt => [p[0] + (cx - p[0]) * inset, p[1] + (cy - p[1]) * inset];
+  const a = shrink(p00);
+  const b = shrink(p10);
+  const c = shrink(p11);
+  const d = shrink(p01);
+  return `${a[0]},${a[1]} ${b[0]},${b[1]} ${c[0]},${c[1]} ${d[0]},${d[1]}`;
+}
+
+function IsoFaceCells({
   origin,
   uCorner,
   vCorner,
   n,
-  stroke,
-  strokeWidth,
+  fill,
+  border,
+  ghost,
+  mini,
 }: {
   origin: Pt;
   uCorner: Pt;
   vCorner: Pt;
   n: number;
-  stroke: string;
-  strokeWidth: number;
+  fill: string;
+  border: string;
+  ghost?: boolean;
+  mini?: boolean;
 }) {
-  const lines: ReactNode[] = [];
-  for (let i = 0; i <= n; i++) {
-    const a = gridPoint(origin, uCorner, vCorner, i, 0, n);
-    const b = gridPoint(origin, uCorner, vCorner, i, n, n);
-    lines.push(
-      <line
-        key={`u${i}`}
-        x1={a[0]}
-        y1={a[1]}
-        x2={b[0]}
-        y2={b[1]}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        vectorEffect="non-scaling-stroke"
-      />,
-    );
+  const inset = mini ? 0.06 : 0.1;
+  const sw = ghost ? 0.7 : mini ? 0.8 : 1.4;
+  const cells: ReactNode[] = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      cells.push(
+        <polygon
+          key={`${i}-${j}`}
+          points={isoCellPoints(origin, uCorner, vCorner, i, j, n, inset)}
+          fill={ghost ? "rgba(210, 210, 210, 0.35)" : fill}
+          stroke={ghost ? "#94a3b8" : border}
+          strokeWidth={sw}
+          strokeLinejoin="round"
+          strokeDasharray={ghost ? "3 2" : undefined}
+        />,
+      );
+    }
   }
-  for (let j = 1; j < n; j++) {
-    const a = gridPoint(origin, uCorner, vCorner, 0, j, n);
-    const b = gridPoint(origin, uCorner, vCorner, n, j, n);
-    lines.push(
-      <line
-        key={`v${j}`}
-        x1={a[0]}
-        y1={a[1]}
-        x2={b[0]}
-        y2={b[1]}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        vectorEffect="non-scaling-stroke"
-      />,
-    );
-  }
-  return <g pointerEvents="none">{lines}</g>;
+  return <g>{cells}</g>;
 }
 
 function isoCorners(x: number, y: number, size: number) {
@@ -130,7 +142,7 @@ function isoCorners(x: number, y: number, size: number) {
   const rightBottom: Pt = [x + w, y + h * 1.5];
   const bottomTip: Pt = [cx, y + h * 2];
   const leftBottom: Pt = [x, y + h * 1.5];
-  return { top, right, bottom, left, rightBottom, bottomTip, leftBottom, w, h };
+  return { top, right, bottom, left, rightBottom, bottomTip, leftBottom };
 }
 
 function IsoFaces({
@@ -141,6 +153,7 @@ function IsoFaces({
   border,
   ghost,
   divisions = 10,
+  mini,
 }: {
   x: number;
   y: number;
@@ -149,46 +162,45 @@ function IsoFaces({
   border: string;
   ghost?: boolean;
   divisions?: number;
+  mini?: boolean;
 }) {
   const c = isoCorners(x, y, size);
-  const fill = ghost ? "rgba(210, 210, 210, 0.35)" : color;
+  const leftFill = ghost ? "rgba(210, 210, 210, 0.35)" : darken(color, 0.28);
+  const rightFill = ghost ? "rgba(210, 210, 210, 0.35)" : darken(color, 0.14);
+  const topFill = ghost ? "rgba(210, 210, 210, 0.35)" : color;
   const stroke = ghost ? "#94a3b8" : border;
-  const sw = ghost ? 0.8 : 1.2;
-  const gridStroke = ghost ? "#94a3b8" : darken(border, 0.08);
-  const gridSw = ghost ? 0.35 : Math.max(0.4, size / 140);
-
-  const leftPts = `${c.left} ${c.bottom} ${c.bottomTip} ${c.leftBottom}`;
-  const rightPts = `${c.bottom} ${c.right} ${c.rightBottom} ${c.bottomTip}`;
-  const topPts = `${c.top} ${c.right} ${c.bottom} ${c.left}`;
 
   return (
     <g className={ghost ? "block-partial-ghost" : ""}>
-      <polygon points={leftPts} fill={darken(fill, ghost ? 0 : 0.28)} stroke={stroke} strokeWidth={sw} />
-      <polygon points={rightPts} fill={darken(fill, ghost ? 0 : 0.14)} stroke={stroke} strokeWidth={sw} />
-      <polygon points={topPts} fill={fill} stroke={stroke} strokeWidth={sw} />
-      <FaceGrid
+      <IsoFaceCells
         origin={c.left}
         uCorner={c.bottom}
         vCorner={c.leftBottom}
         n={divisions}
-        stroke={gridStroke}
-        strokeWidth={gridSw}
+        fill={leftFill}
+        border={stroke}
+        ghost={ghost}
+        mini={mini}
       />
-      <FaceGrid
+      <IsoFaceCells
         origin={c.bottom}
         uCorner={c.right}
         vCorner={c.bottomTip}
         n={divisions}
-        stroke={gridStroke}
-        strokeWidth={gridSw}
+        fill={rightFill}
+        border={stroke}
+        ghost={ghost}
+        mini={mini}
       />
-      <FaceGrid
+      <IsoFaceCells
         origin={c.left}
         uCorner={c.top}
         vCorner={c.bottom}
         n={divisions}
-        stroke={gridStroke}
-        strokeWidth={gridSw}
+        fill={topFill}
+        border={stroke}
+        ghost={ghost}
+        mini={mini}
       />
     </g>
   );
@@ -298,6 +310,7 @@ function CubeStackView({
   border,
   filledLayers = 10,
   selected,
+  mini,
 }: {
   width: number;
   height: number;
@@ -305,6 +318,7 @@ function CubeStackView({
   border: string;
   filledLayers?: number;
   selected?: boolean;
+  mini?: boolean;
 }) {
   const layers = 10;
   const size = width * 0.72;
@@ -325,6 +339,7 @@ function CubeStackView({
             color={color}
             border={border}
             ghost={ghost}
+            mini={mini}
           />
         );
       })}
@@ -339,12 +354,14 @@ function IsoCubeView({
   color,
   border,
   selected,
+  mini,
 }: {
   width: number;
   height: number;
   color: string;
   border: string;
   selected?: boolean;
+  mini?: boolean;
 }) {
   const size = Math.min(width, height) * 0.92;
   const x = (width - size) / 2;
@@ -352,7 +369,7 @@ function IsoCubeView({
 
   return (
     <g>
-      <IsoFaces x={x} y={y} size={size} color={color} border={border} />
+      <IsoFaces x={x} y={y} size={size} color={color} border={border} mini={mini} />
       {selected && <SelectionRect width={width} height={height} />}
     </g>
   );
@@ -410,7 +427,7 @@ export function BlockSvg({
           <FlatView width={pw} height={ph} color={pc} border={pb} filledRows={partialFill} selected={selected} mini={mini} />
         )}
         {partialShape === "cube" && (
-          <CubeStackView width={pw} height={ph} color={pc} border={pb} filledLayers={partialFill} selected={selected} />
+          <CubeStackView width={pw} height={ph} color={pc} border={pb} filledLayers={partialFill} selected={selected} mini={mini} />
         )}
       </svg>
     );
@@ -444,7 +461,7 @@ export function BlockSvg({
 
   return (
     <svg viewBox={`0 0 ${displayW} ${displayH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
-      <IsoCubeView width={displayW} height={displayH} color={color} border={border} selected={selected} />
+      <IsoCubeView width={displayW} height={displayH} color={color} border={border} selected={selected} mini={mini} />
     </svg>
   );
 }
