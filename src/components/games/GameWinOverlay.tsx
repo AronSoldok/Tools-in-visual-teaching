@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGamesStore } from "@/store/gamesStore";
 
 type Particle = {
@@ -107,12 +107,27 @@ function Fireworks({ colors }: { colors: string[] }) {
 export function GameWinOverlay() {
   const winner = useGamesStore((s) => s.winner);
   const screen = useGamesStore((s) => s.screen);
+  const kind = useGamesStore((s) => s.kind);
   const teamA = useGamesStore((s) => s.teamA);
   const teamB = useGamesStore((s) => s.teamB);
   const replay = useGamesStore((s) => s.replay);
   const backToPick = useGamesStore((s) => s.backToPick);
+  const [ready, setReady] = useState(false);
 
-  if (!winner || screen !== "play") return null;
+  useEffect(() => {
+    if (!winner || screen !== "play") {
+      setReady(false);
+      return;
+    }
+    if (kind === "fight" && winner !== "draw") {
+      setReady(false);
+      const id = window.setTimeout(() => setReady(true), 1400);
+      return () => window.clearTimeout(id);
+    }
+    setReady(true);
+  }, [winner, screen, kind]);
+
+  if (!winner || screen !== "play" || !ready) return null;
 
   const isDraw = winner === "draw";
   const name = winner === "a" ? teamA.name : winner === "b" ? teamB.name : "";

@@ -131,6 +131,7 @@ export function GamePlay() {
             actor={fightActor}
             until={fightUntil}
             lastHit={lastHit}
+            winner={winner}
           />
         )}
       </div>
