@@ -89,13 +89,14 @@ export function getDefaultFreePosition(
   type: BoardBlock["type"],
   index: number,
   offsetX = 0,
+  scale = 1,
 ): { x: number; y: number } {
   const { width, height } = BLOCK_CONFIG[type];
   const col = index % 4;
   const row = Math.floor(index / 4);
   return {
-    x: offsetX + 40 + col * (width + 16),
-    y: 80 + row * (height + 16),
+    x: offsetX + 40 + col * (width * scale + 16),
+    y: 80 + row * (height * scale + 16),
   };
 }
 

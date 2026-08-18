@@ -13,6 +13,7 @@ import {
 } from "@dnd-kit/core";
 import type { BlockGroup } from "@/lib/boardModes";
 import { getChartDropInfo, getDropPosition } from "@/lib/dndHelpers";
+import { computeWorkspaceBlockScale } from "@/lib/blockScale";
 import type { BlockType } from "@/lib/blockTypes";
 import { detectColumn } from "@/lib/snap";
 import { useBoardStore } from "@/store/boardStore";
@@ -62,7 +63,15 @@ export function Board() {
   const moveBlock = useBoardStore((s) => s.moveBlock);
   const deleteSelectedBlock = useBoardStore((s) => s.deleteSelectedBlock);
   const chartWidth = useBoardStore((s) => s.chartWidth);
+  const blocks = useBoardStore((s) => s.blocks);
+  const workspaceWidth = useBoardStore((s) => s.workspaceWidth);
+  const workspaceHeight = useBoardStore((s) => s.workspaceHeight);
   const setFullscreen = useBoardStore((s) => s.setFullscreen);
+  const workspaceScale = computeWorkspaceBlockScale(
+    blocks.filter((b) => b.column === "free"),
+    workspaceWidth,
+    workspaceHeight,
+  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -149,8 +158,17 @@ export function Board() {
           const wsId =
             WORKSPACE_SELECTORS[overId] ? overId : CHART_GROUPS[overId] === "a" ? "workspace-a" : "workspace-b";
           const selector = WORKSPACE_SELECTORS[wsId];
-          const pos = getDropPosition(event, selector, data.type);
+          const extraLarge = data.type === "flat" || data.type === "cube" ? 1 : 0;
           const group = WORKSPACE_GROUPS[wsId] ?? CHART_GROUPS[overId];
+          const state = useBoardStore.getState();
+          const groupBlocks = state.getBlocksByGroup(group).filter((b) => b.column === "free");
+          const scale = computeWorkspaceBlockScale(
+            groupBlocks,
+            state.workspaceWidth,
+            state.workspaceHeight,
+            extraLarge,
+          );
+          const pos = getDropPosition(event, selector, data.type, scale);
           if (pos) {
             addBlockFromPalette(data.type, pos.x, pos.y, false, undefined, group);
           }
@@ -236,7 +254,10 @@ export function Board() {
       <DragOverlay dropAnimation={null}>
         {activeDrag ? (
           <div className="drag-overlay-block">
-            <BlockSvg type={activeDrag.type} />
+            <BlockSvg
+              type={activeDrag.type}
+              scale={activeDrag.isPalette ? 1 : workspaceScale}
+            />
           </div>
         ) : null}
       </DragOverlay>

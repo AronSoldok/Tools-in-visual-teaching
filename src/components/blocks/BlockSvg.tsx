@@ -10,6 +10,7 @@ interface BlockSvgProps {
   partialFill?: number;
   partialShape?: BlockType;
   mini?: boolean;
+  scale?: number;
 }
 
 function darken(hex: string, amount = 0.2): string {
@@ -382,12 +383,14 @@ export function BlockSvg({
   partialFill,
   partialShape,
   mini,
+  scale = 1,
 }: BlockSvgProps) {
   const config = BLOCK_CONFIG[type];
   const { width, height, color, border } = config;
+  const visualScale = mini ? 1 : scale;
 
-  const displayW = mini ? 36 : width;
-  const displayH = mini
+  const drawW = mini ? 36 : width;
+  const drawH = mini
     ? type === "unit"
       ? 24
       : type === "rod"
@@ -396,6 +399,8 @@ export function BlockSvg({
           ? 36
           : 32
     : height;
+  const displayW = drawW * visualScale;
+  const displayH = drawH * visualScale;
 
   if (partialFill && partialShape) {
     const shapeConfig = BLOCK_CONFIG[partialShape];
@@ -409,14 +414,16 @@ export function BlockSvg({
             ? 36
             : 32
       : shapeConfig.height;
+    const displayPw = pw * visualScale;
+    const displayPh = ph * visualScale;
     const pc = BLOCK_CONFIG[type].color;
     const pb = BLOCK_CONFIG[type].border;
 
     return (
       <svg
         viewBox={`0 0 ${pw} ${ph}`}
-        width={pw}
-        height={ph}
+        width={displayPw}
+        height={displayPh}
         className={className}
         aria-label={`${partialFill} из 10`}
       >
@@ -435,8 +442,9 @@ export function BlockSvg({
 
   if (type === "unit") {
     const s = mini ? 22 : width;
+    const displayS = s * visualScale;
     return (
-      <svg viewBox={`0 0 ${s} ${s}`} width={s} height={s} className={className} aria-label={config.labelRu}>
+      <svg viewBox={`0 0 ${s} ${s}`} width={displayS} height={displayS} className={className} aria-label={config.labelRu}>
         <Square2D x={0} y={0} size={s} color={color} border={border} />
         {selected && <SelectionRect width={s} height={s} />}
       </svg>
@@ -445,23 +453,23 @@ export function BlockSvg({
 
   if (type === "rod") {
     return (
-      <svg viewBox={`0 0 ${displayW} ${displayH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
-        <RodView width={displayW} height={displayH} color={color} border={border} selected={selected} mini={mini} />
+      <svg viewBox={`0 0 ${drawW} ${drawH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
+        <RodView width={drawW} height={drawH} color={color} border={border} selected={selected} mini={mini} />
       </svg>
     );
   }
 
   if (type === "flat") {
     return (
-      <svg viewBox={`0 0 ${displayW} ${displayH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
-        <FlatView width={displayW} height={displayH} color={color} border={border} selected={selected} mini={mini} />
+      <svg viewBox={`0 0 ${drawW} ${drawH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
+        <FlatView width={drawW} height={drawH} color={color} border={border} selected={selected} mini={mini} />
       </svg>
     );
   }
 
   return (
-    <svg viewBox={`0 0 ${displayW} ${displayH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
-      <IsoCubeView width={displayW} height={displayH} color={color} border={border} selected={selected} mini={mini} />
+    <svg viewBox={`0 0 ${drawW} ${drawH}`} width={displayW} height={displayH} className={className} aria-label={config.labelRu}>
+      <IsoCubeView width={drawW} height={drawH} color={color} border={border} selected={selected} mini={mini} />
     </svg>
   );
 }

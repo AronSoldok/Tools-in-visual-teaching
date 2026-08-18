@@ -658,6 +658,15 @@ body {
   inset: 0;
   background: var(--workspace-bg);
   overflow: hidden;
+  touch-action: none;
+}
+
+.workspace-marquee {
+  position: absolute;
+  z-index: 20;
+  border: 2px dashed var(--primary);
+  background: rgba(224, 122, 58, 0.12);
+  pointer-events: none;
 }
 
 .workspace.drop-over {

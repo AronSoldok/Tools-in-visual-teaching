@@ -11,6 +11,7 @@ import {
   createBlockId,
 } from "@/lib/blockTypes";
 import { composeAll, composeSelected, decomposeBlock } from "@/lib/regroup";
+import { computeWorkspaceBlockScale } from "@/lib/blockScale";
 import {
   calculateTotal,
   randomWholeNumber,
@@ -54,6 +55,7 @@ interface BoardState {
   setBoardMode: (mode: BoardMode) => void;
   selectBlockExclusive: (id: string) => void;
   addBlockToSelection: (id: string) => void;
+  setSelectedBlockIds: (ids: string[]) => void;
   clearSelection: () => void;
   setFullscreen: (value: boolean) => void;
 
@@ -125,6 +127,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (current.includes(id)) return;
     set({ selectedBlockIds: [...current, id] });
   },
+  setSelectedBlockIds: (ids) => set({ selectedBlockIds: ids }),
   clearSelection: () => set({ selectedBlockIds: [] }),
   setFullscreen: (value) => set({ isFullscreen: value }),
 
@@ -172,7 +175,15 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       position = { x, y };
     } else {
       const offsetX = targetGroup === "b" ? 400 : 0;
-      position = getDefaultFreePosition(type, freeCount, offsetX);
+      const { workspaceWidth, workspaceHeight } = get();
+      const extraLarge = type === "flat" || type === "cube" ? 1 : 0;
+      const scale = computeWorkspaceBlockScale(
+        groupBlocks.filter((b) => b.column === "free"),
+        workspaceWidth,
+        workspaceHeight,
+        extraLarge,
+      );
+      position = getDefaultFreePosition(type, freeCount, offsetX, scale);
     }
 
     const newBlock: BoardBlock = {

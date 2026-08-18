@@ -6,6 +6,7 @@ export function getDropPosition(
   event: DragEndEvent,
   containerSelector: string,
   blockType: BlockType,
+  scale = 1,
 ): { x: number; y: number } | null {
   const el = document.querySelector(containerSelector);
   if (!el) return null;
@@ -32,8 +33,8 @@ export function getDropPosition(
   }
 
   return {
-    x: clientX + delta.x - rect.left - config.width / 2,
-    y: clientY + delta.y - rect.top - config.height / 2,
+    x: clientX + delta.x - rect.left - (config.width * scale) / 2,
+    y: clientY + delta.y - rect.top - (config.height * scale) / 2,
   };
 }
 

@@ -14,6 +14,7 @@ interface DraggableBlockProps {
   selected?: boolean;
   invalid?: boolean;
   isPalette?: boolean;
+  scale?: number;
 }
 
 export function DraggableBlock({
@@ -22,6 +23,7 @@ export function DraggableBlock({
   selected,
   invalid,
   isPalette,
+  scale = 1,
 }: DraggableBlockProps) {
   const boardMode = useBoardStore((s) => s.boardMode);
   const block = useBoardStore((s) => s.blocks.find((b) => b.id === id));
@@ -82,6 +84,7 @@ export function DraggableBlock({
         type={type}
         selected={selected}
         mini={isPalette}
+        scale={isPalette ? 1 : scale}
         partialFill={block?.partialFill}
         partialShape={block?.partialShape}
       />
