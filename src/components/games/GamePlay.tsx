@@ -1,11 +1,22 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
-import { BattleArena } from "./BattleArena";
-import { RaceArena } from "./RaceArena";
 import { TeamPanel } from "./TeamPanel";
-import { TugArena } from "./TugArena";
 import { useGamesStore } from "@/store/gamesStore";
+
+const TugArena = dynamic(() => import("./TugArena").then((m) => m.TugArena), {
+  ssr: false,
+  loading: () => <div className="games-arena-stage" />,
+});
+const RaceArena = dynamic(() => import("./RaceArena").then((m) => m.RaceArena), {
+  ssr: false,
+  loading: () => <div className="games-arena-stage" />,
+});
+const BattleArena = dynamic(() => import("./BattleArena").then((m) => m.BattleArena), {
+  ssr: false,
+  loading: () => <div className="games-arena-stage" />,
+});
 
 function formatTime(total: number) {
   const m = Math.floor(total / 60);

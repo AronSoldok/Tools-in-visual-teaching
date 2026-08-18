@@ -1,8 +1,20 @@
 "use client";
 
+import { Container, Graphics, Sprite } from "pixi.js";
+import { useCallback, useRef } from "react";
+import { PixelStage, type PixelSceneApi } from "./PixelStage";
 import type { TeamId } from "@/store/gamesStore";
 
-type ArenaProps = {
+const ASSETS = {
+  heroA: "/games/tug/hero_a.png",
+  heroA2: "/games/tug/hero_a2.png",
+  heroB: "/games/tug/hero_b.png",
+  heroB2: "/games/tug/hero_b2.png",
+  grass: "/games/tug/grass.png",
+  sky: "/games/tug/sky.png",
+};
+
+type Props = {
   colorA: string;
   colorB: string;
   scoreA: number;
@@ -12,72 +24,106 @@ type ArenaProps = {
   lastCorrectAt: number;
 };
 
-function Person({
-  x,
-  y,
-  color,
-  facing,
-  delay,
-}: {
-  x: number;
-  y: number;
-  color: string;
-  facing: 1 | -1;
-  delay: string;
-}) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${facing} 1)`}>
-      <ellipse className="tug-shadow" cx="0" cy="58" rx="16" ry="5" />
-      <g className="tug-body" style={{ animationDelay: delay }}>
-        <line className="tug-leg back" x1="0" y1="18" x2="-10" y2="54" stroke="#3d2c1e" />
-        <line className="tug-leg front" x1="0" y1="18" x2="8" y2="54" stroke="#3d2c1e" />
-        <line className="tug-torso" x1="0" y1="18" x2="4" y2="-8" stroke={color} />
-        <line className="tug-arm" x1="2" y1="0" x2="28" y2="-6" stroke={color} />
-        <circle cx="6" cy="-16" r="8" fill={color} />
-      </g>
-    </g>
-  );
+function hexToNum(hex: string) {
+  return Number.parseInt(hex.replace("#", ""), 16);
 }
 
-export function TugArena({ colorA, colorB, scoreA, scoreB, winScore, lastCorrect, lastCorrectAt }: ArenaProps) {
-  const lead = Math.max(-1, Math.min(1, (scoreA - scoreB) / Math.max(1, winScore)));
-  const shift = lead * 90;
+export function TugArena(props: Props) {
+  const live = useRef(props);
+  live.current = props;
 
-  return (
-    <svg className="games-arena-svg tug-arena" viewBox="0 0 800 220" role="img" aria-label="Перетягивание каната">
-      <defs>
-        <linearGradient id="tug-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#dbeafe" />
-          <stop offset="55%" stopColor="#fde8d8" />
-          <stop offset="100%" stopColor="#bbf7d0" />
-        </linearGradient>
-      </defs>
-      <rect width="800" height="220" fill="url(#tug-sky)" />
-      <ellipse cx="400" cy="198" rx="380" ry="28" fill="#86efac" />
-      <rect x="388" y="40" width="8" height="130" rx="3" fill="#92400e" />
-      <polygon points="396,40 396,78 448,59" fill="#f97316" />
+  const setup = useCallback(({ app, textures }: PixelSceneApi) => {
+    const world = new Container();
+    app.stage.addChild(world);
+    const bg = new Graphics();
+    const ground = new Graphics();
+    const rope = new Graphics();
+    const flag = new Graphics();
+    world.addChild(bg, ground, flag, rope);
 
-      <g className="tug-field" style={{ transform: `translateX(${shift}px)` }}>
-        <g className={lastCorrect ? `tug-yank tug-yank-${lastCorrect}` : ""} key={lastCorrectAt}>
-          <Person x={118} y={92} color={colorA} facing={1} delay="0s" />
-          <Person x={168} y={96} color={colorA} facing={1} delay="0.12s" />
-          <Person x={218} y={90} color={colorA} facing={1} delay="0.24s" />
-          <Person x={582} y={90} color={colorB} facing={-1} delay="0.08s" />
-          <Person x={632} y={96} color={colorB} facing={-1} delay="0.2s" />
-          <Person x={682} y={92} color={colorB} facing={-1} delay="0.32s" />
+    const makeCrew = (tex: typeof textures.heroA, tex2: typeof textures.heroA2, tint: number, flip: boolean) => {
+      return [0, 1, 2].map((i) => {
+        const s = new Sprite(tex);
+        s.anchor.set(0.5, 1);
+        s.scale.set(flip ? -5 : 5, 5);
+        s.tint = tint;
+        s.zIndex = i;
+        (s as Sprite & { alt: typeof tex2 }).alt = tex2;
+        (s as Sprite & { base: typeof tex }).base = tex;
+        world.addChild(s);
+        return s;
+      });
+    };
 
-          <g className="tug-rope">
-            <path
-              d="M236 96 C 280 88, 330 104, 400 96 C 470 88, 520 104, 564 96"
-              fill="none"
-              stroke="#92400e"
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-            <circle cx="400" cy="96" r="7" fill="#facc15" stroke="#92400e" strokeWidth="2" />
-          </g>
-        </g>
-      </g>
-    </svg>
-  );
+    const crewA = makeCrew(textures.heroA, textures.heroA2, hexToNum(live.current.colorA), false);
+    const crewB = makeCrew(textures.heroB, textures.heroB2, hexToNum(live.current.colorB), true);
+
+    const layout = () => {
+      const w = app.screen.width;
+      const h = app.screen.height;
+      bg.clear().rect(0, 0, w, h).fill(0x7dd3fc);
+      bg.rect(0, h * 0.55, w, h * 0.45).fill(0x4ade80);
+      ground.clear().rect(0, h * 0.78, w, h * 0.22).fill(0x22c55e);
+
+      const mid = w / 2;
+      flag.clear().rect(mid - 4, h * 0.18, 8, h * 0.55).fill(0x7c2d12);
+      flag.poly([mid + 4, h * 0.18, mid + 4, h * 0.34, mid + 56, h * 0.26]).fill(0xf97316);
+    };
+
+    layout();
+    const onResize = () => layout();
+    app.renderer.on("resize", onResize);
+
+    let yank = 0;
+    let lastBurst = 0;
+    const tick = () => {
+      const p = live.current;
+      const w = app.screen.width;
+      const h = app.screen.height;
+      const lead = Math.max(-1, Math.min(1, (p.scoreA - p.scoreB) / Math.max(1, p.winScore)));
+      const shift = lead * (w * 0.16);
+      if (p.lastCorrectAt !== lastBurst && p.lastCorrect) {
+        lastBurst = p.lastCorrectAt;
+        yank = p.lastCorrect === "a" ? -22 : 22;
+      }
+      yank *= 0.82;
+      const x = shift + yank;
+      const baseY = h * 0.78;
+
+      crewA.forEach((s, i) => {
+        s.tint = hexToNum(p.colorA);
+        s.x = w * 0.22 + i * 46 + x;
+        s.y = baseY + Math.sin(app.ticker.lastTime / 160 + i) * 3;
+        s.rotation = Math.sin(app.ticker.lastTime / 180 + i) * 0.12;
+        s.texture = Math.sin(app.ticker.lastTime / 120 + i) > 0 ? textures.heroA : textures.heroA2;
+      });
+      crewB.forEach((s, i) => {
+        s.tint = hexToNum(p.colorB);
+        s.x = w * 0.78 - i * 46 + x;
+        s.y = baseY + Math.sin(app.ticker.lastTime / 150 + i) * 3;
+        s.rotation = -Math.sin(app.ticker.lastTime / 180 + i) * 0.12;
+        s.texture = Math.sin(app.ticker.lastTime / 120 + i) > 0 ? textures.heroB : textures.heroB2;
+      });
+
+      const leftHand = crewA[2].x + 18;
+      const rightHand = crewB[2].x - 18;
+      const ropeY = baseY - 28;
+      rope.clear();
+      rope.moveTo(leftHand, ropeY);
+      for (let i = 1; i <= 12; i++) {
+        const t = i / 12;
+        rope.lineTo(leftHand + (rightHand - leftHand) * t, ropeY + Math.sin(t * Math.PI * 4 + app.ticker.lastTime / 90) * 4);
+      }
+      rope.stroke({ width: 8, color: 0x92400e });
+      rope.circle((leftHand + rightHand) / 2, ropeY, 7).fill(0xfacc15);
+    };
+    app.ticker.add(tick);
+
+    return () => {
+      app.ticker.remove(tick);
+      app.renderer.off("resize", onResize);
+    };
+  }, []);
+
+  return <PixelStage background={0x7dd3fc} assets={ASSETS} setup={setup} />;
 }

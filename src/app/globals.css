@@ -1898,26 +1898,38 @@ body {
 }
 
 .games-arena-wrap {
-  flex: 0 0 auto;
-  padding: 8px 16px 0;
+  flex: 1 1 42%;
+  min-height: 220px;
+  padding: 0;
+}
+
+.games-arena-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: block;
+  background: #7dd3fc;
+  overflow: hidden;
+}
+
+.games-arena-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .games-arena-svg {
-  display: block;
-  width: 100%;
-  height: min(240px, 28vh);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  overflow: hidden;
+  display: none;
 }
 
 .games-teams {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 58%;
+  min-height: 240px;
   padding: 10px 16px 16px;
 }
 
@@ -2327,10 +2339,6 @@ body {
   .games-teams-setup,
   .games-teams {
     grid-template-columns: 1fr;
-  }
-
-  .games-arena-svg {
-    height: 160px;
   }
 
   .team-problem {

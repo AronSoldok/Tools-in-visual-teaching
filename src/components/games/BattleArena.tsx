@@ -1,6 +1,20 @@
 "use client";
 
+import { Container, Graphics, Sprite } from "pixi.js";
+import { useCallback, useRef } from "react";
+import { PixelStage, type PixelSceneApi } from "./PixelStage";
 import type { TeamId } from "@/store/gamesStore";
+
+const ASSETS = {
+  dinghy: "/games/battle/dinghy.png",
+  sloop: "/games/battle/sloop.png",
+  galleon: "/games/battle/galleon.png",
+  fire1: "/games/battle/fire1.png",
+  fire2: "/games/battle/fire2.png",
+  boom: "/games/battle/boom.png",
+  ball: "/games/battle/ball.png",
+  water: "/games/battle/water.png",
+};
 
 type Props = {
   colorA: string;
@@ -22,96 +36,150 @@ function shipState(oppScore: number, winScore: number, index: number): ShipState
   return "ok";
 }
 
-function Fire() {
-  return (
-    <g className="ship-fire" aria-hidden>
-      <path className="flame f1" d="M0 8 C -6 0, -2 -10, 0 -14 C 3 -8, 6 0, 0 8" />
-      <path className="flame f2" d="M4 8 C 0 2, 4 -6, 7 -10 C 9 -4, 10 2, 4 8" />
-      <path className="smoke s1" d="M-2 -12 C -8 -20, 2 -26, 6 -18" />
-    </g>
-  );
+function hexToNum(hex: string) {
+  return Number.parseInt(hex.replace("#", ""), 16);
 }
 
-function Ship({
-  x,
-  y,
-  color,
-  flip,
-  state,
-}: {
-  x: number;
-  y: number;
-  color: string;
-  flip: boolean;
-  state: ShipState;
-}) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${flip ? -1 : 1} 1)`}>
-      <g className={`battle-ship-inner ${state}`}>
-        <ellipse className="ship-wake" cx="36" cy="34" rx="40" ry="7" />
-        <path d="M4 18 L68 18 L58 32 L12 32 Z" fill={color} />
-        <rect x="22" y="6" width="22" height="12" rx="2" fill={color} />
-        <rect x="40" y="-8" width="3" height="16" fill="#7c2d12" />
-        <polygon points="43,-8 43,4 56,-2" fill="#f8fafc" />
-        <circle cx="18" cy="12" r="3" fill="#fde68a" />
-        {state !== "ok" && (
-          <g transform="translate(30 -6)">
-            <Fire />
-          </g>
-        )}
-      </g>
-    </g>
-  );
-}
+export function BattleArena(props: Props) {
+  const live = useRef(props);
+  live.current = props;
 
-export function BattleArena({ colorA, colorB, scoreA, scoreB, winScore, lastCorrect, lastCorrectAt }: Props) {
-  const leftStates = [0, 1, 2].map((i) => shipState(scoreB, winScore, i));
-  const rightStates = [0, 1, 2].map((i) => shipState(scoreA, winScore, i));
-  const score = lastCorrect === "a" ? scoreA : lastCorrect === "b" ? scoreB : 0;
-  const stage = Math.min(6, Math.round((score / Math.max(1, winScore)) * 6));
-  const targetIndex = Math.min(2, Math.max(0, Math.floor((stage - 1) / 2)));
+  const setup = useCallback(({ app, textures }: PixelSceneApi) => {
+    const world = new Container();
+    app.stage.addChild(world);
+    const water = new Graphics();
+    world.addChild(water);
 
-  const shotFrom =
-    lastCorrect === "a" ? { x: 150, y: 70 + targetIndex * 52 } : { x: 650, y: 70 + targetIndex * 52 };
-  const shotTo =
-    lastCorrect === "a" ? { x: 620, y: 78 + targetIndex * 52 } : { x: 180, y: 78 + targetIndex * 52 };
+    const waterTiles: Sprite[] = [];
+    const makeShip = (tex: (typeof textures)["sloop"], tint: number, left: boolean) => {
+      const hull = new Sprite(tex);
+      hull.anchor.set(0.5);
+      hull.scale.set(0.9);
+      hull.tint = tint;
+      hull.rotation = left ? -Math.PI / 2 : Math.PI / 2;
+      const fire = new Sprite(textures.fire1);
+      fire.anchor.set(0.5, 1);
+      fire.scale.set(2);
+      fire.visible = false;
+      const boom = new Sprite(textures.boom);
+      boom.anchor.set(0.5);
+      boom.scale.set(1.2);
+      boom.visible = false;
+      world.addChild(hull, fire, boom);
+      return { hull, fire, boom };
+    };
 
-  return (
-    <svg className="games-arena-svg battle-arena" viewBox="0 0 800 230" role="img" aria-label="Морской бой">
-      <defs>
-        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7dd3fc" />
-          <stop offset="100%" stopColor="#0284c7" />
-        </linearGradient>
-      </defs>
-      <rect width="800" height="230" fill="url(#sea)" />
-      <path
-        className="sea-wave w1"
-        d="M0 40 Q 40 28 80 40 T 160 40 T 240 40 T 320 40 T 400 40 T 480 40 T 560 40 T 640 40 T 720 40 T 800 40 V0 H0 Z"
-      />
-      <path
-        className="sea-wave w2"
-        d="M0 210 Q 50 198 100 210 T 200 210 T 300 210 T 400 210 T 500 210 T 600 210 T 700 210 T 800 210 V230 H0 Z"
-      />
+    const left = [
+      makeShip(textures.dinghy, hexToNum(live.current.colorA), true),
+      makeShip(textures.sloop, hexToNum(live.current.colorA), true),
+      makeShip(textures.galleon, hexToNum(live.current.colorA), true),
+    ];
+    const right = [
+      makeShip(textures.dinghy, hexToNum(live.current.colorB), false),
+      makeShip(textures.sloop, hexToNum(live.current.colorB), false),
+      makeShip(textures.galleon, hexToNum(live.current.colorB), false),
+    ];
 
-      {[0, 1, 2].map((i) => (
-        <Ship key={`a-${i}`} x={48} y={48 + i * 52} color={colorA} flip={false} state={leftStates[i]} />
-      ))}
-      {[0, 1, 2].map((i) => (
-        <Ship key={`b-${i}`} x={752} y={48 + i * 52} color={colorB} flip={true} state={rightStates[i]} />
-      ))}
+    const shot = new Sprite(textures.ball);
+    shot.anchor.set(0.5);
+    shot.scale.set(2);
+    shot.visible = false;
+    world.addChild(shot);
+    let shotT = 1;
+    let shotFrom = { x: 0, y: 0 };
+    let shotTo = { x: 0, y: 0 };
 
-      {lastCorrect && (
-        <circle
-          key={lastCorrectAt}
-          className="battle-shot"
-          r="6"
-          fill="#0f172a"
-          style={{
-            offsetPath: `path("M ${shotFrom.x} ${shotFrom.y} L ${shotTo.x} ${shotTo.y}")`,
-          }}
-        />
-      )}
-    </svg>
-  );
+    const layoutTiles = () => {
+      const w = app.screen.width;
+      const h = app.screen.height;
+      water.clear().rect(0, 0, w, h).fill(0x38bdf8);
+      const tw = textures.water.width * 2;
+      const th = textures.water.height * 2;
+      let n = 0;
+      for (let y = 0; y < h + th; y += th) {
+        for (let x = 0; x < w + tw; x += tw) {
+          let tile = waterTiles[n];
+          if (!tile) {
+            tile = new Sprite(textures.water);
+            tile.scale.set(2);
+            tile.alpha = 0.55;
+            world.addChildAt(tile, 1);
+            waterTiles.push(tile);
+          }
+          tile.position.set(x, y);
+          tile.visible = true;
+          n += 1;
+        }
+      }
+      for (let i = n; i < waterTiles.length; i++) waterTiles[i].visible = false;
+    };
+
+    layoutTiles();
+    const onResize = () => layoutTiles();
+    app.renderer.on("resize", onResize);
+
+    let lastBurst = 0;
+    const tick = () => {
+      const p = live.current;
+      const w = app.screen.width;
+      const h = app.screen.height;
+      const leftStates = [0, 1, 2].map((i) => shipState(p.scoreB, p.winScore, i));
+      const rightStates = [0, 1, 2].map((i) => shipState(p.scoreA, p.winScore, i));
+
+      const place = (fleet: typeof left, states: ShipState[], side: "l" | "r") => {
+        fleet.forEach((ship, i) => {
+          const x = side === "l" ? w * 0.18 : w * 0.82;
+          const y = h * (0.22 + i * 0.28);
+          const bob = Math.sin(app.ticker.lastTime / 220 + i) * 4;
+          ship.hull.position.set(x, y + bob);
+          ship.hull.tint = hexToNum(side === "l" ? p.colorA : p.colorB);
+          const st = states[i];
+          ship.fire.visible = st !== "ok";
+          ship.fire.texture = Math.sin(app.ticker.lastTime / 80) > 0 ? textures.fire1 : textures.fire2;
+          ship.fire.position.set(x, y + bob - 10);
+          if (st === "sunk") {
+            ship.hull.alpha = 0.35;
+            ship.hull.rotation = (side === "l" ? -Math.PI / 2 : Math.PI / 2) + 0.45;
+            ship.hull.y = y + 18;
+            ship.boom.visible = true;
+            ship.boom.position.set(x, y);
+            ship.boom.alpha = 0.85;
+          } else {
+            ship.hull.alpha = 1;
+            ship.hull.rotation = side === "l" ? -Math.PI / 2 : Math.PI / 2;
+            ship.boom.visible = false;
+          }
+        });
+      };
+      place(left, leftStates, "l");
+      place(right, rightStates, "r");
+
+      if (p.lastCorrectAt !== lastBurst && p.lastCorrect) {
+        lastBurst = p.lastCorrectAt;
+        const score = p.lastCorrect === "a" ? p.scoreA : p.scoreB;
+        const stage = Math.min(6, Math.round((score / Math.max(1, p.winScore)) * 6));
+        const idx = Math.min(2, Math.max(0, Math.floor((stage - 1) / 2)));
+        const from = p.lastCorrect === "a" ? left[idx] : right[idx];
+        const to = p.lastCorrect === "a" ? right[idx] : left[idx];
+        shotFrom = { x: from.hull.x, y: from.hull.y };
+        shotTo = { x: to.hull.x, y: to.hull.y };
+        shotT = 0;
+        shot.visible = true;
+      }
+      if (shotT < 1) {
+        shotT = Math.min(1, shotT + 0.06);
+        shot.x = shotFrom.x + (shotTo.x - shotFrom.x) * shotT;
+        shot.y = shotFrom.y + (shotTo.y - shotFrom.y) * shotT - Math.sin(shotT * Math.PI) * 30;
+        if (shotT >= 1) shot.visible = false;
+      }
+    };
+    app.ticker.add(tick);
+
+    return () => {
+      app.ticker.remove(tick);
+      app.renderer.off("resize", onResize);
+    };
+  }, []);
+
+  return <PixelStage background={0x38bdf8} assets={ASSETS} setup={setup} />;
 }
