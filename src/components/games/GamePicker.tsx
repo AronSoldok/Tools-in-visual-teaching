@@ -6,6 +6,7 @@ const GAMES: { id: GameKind; title: string; hint: string; art: string }[] = [
   { id: "tug", title: "Перетягивание каната", hint: "Кто быстрее считает — тот тянет канат на свою сторону.", art: "🪢" },
   { id: "race", title: "Гонки", hint: "Верный ответ двигает машинку вперёд к финишу.", art: "🏎️" },
   { id: "battle", title: "Морской бой", hint: "Попадания поджигают корабли, затем они тонут.", art: "🚢" },
+  { id: "fight", title: "Бой", hint: "Верный ответ — удар, блок снижает урон, ошибка даёт промах или борьбу.", art: "🥊" },
 ];
 
 export function GamePicker() {

@@ -17,6 +17,7 @@ const KIND_TITLES = {
   tug: "Перетягивание каната",
   race: "Гонки",
   battle: "Морской бой",
+  fight: "Бой",
 };
 
 function formatTime(total: number) {
@@ -100,37 +101,39 @@ export function GameSetup() {
                 ))}
               </div>
             </section>
-            <section className="games-card">
-              <p className="games-card-label">Сколько верных ответов до победы</p>
-              <div className="games-chip-row">
-                {WIN_PRESETS.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`mode-btn ${settings.winScore === n ? "active" : ""}`}
-                    onClick={() => setWinScore(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
-                <label className="games-inline-field">
-                  Своё
-                  <input
-                    type="number"
-                    min={1}
-                    max={99}
-                    className="games-num-input"
-                    value={customWin ? settings.winScore : ""}
-                    placeholder="…"
-                    onChange={(e) => {
-                      if (e.target.value === "") return;
-                      const n = Number(e.target.value);
-                      if (Number.isFinite(n)) setWinScore(n);
-                    }}
-                  />
-                </label>
-              </div>
-            </section>
+            {kind !== "fight" && (
+              <section className="games-card">
+                <p className="games-card-label">Сколько верных ответов до победы</p>
+                <div className="games-chip-row">
+                  {WIN_PRESETS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`mode-btn ${settings.winScore === n ? "active" : ""}`}
+                      onClick={() => setWinScore(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <label className="games-inline-field">
+                    Своё
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      className="games-num-input"
+                      value={customWin ? settings.winScore : ""}
+                      placeholder="…"
+                      onChange={(e) => {
+                        if (e.target.value === "") return;
+                        const n = Number(e.target.value);
+                        if (Number.isFinite(n)) setWinScore(n);
+                      }}
+                    />
+                  </label>
+                </div>
+              </section>
+            )}
             <section className="games-card">
               <p className="games-card-label">Общий таймер матча</p>
               <div className="games-chip-row">

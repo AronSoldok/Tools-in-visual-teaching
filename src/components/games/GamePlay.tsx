@@ -17,6 +17,10 @@ const BattleArena = dynamic(() => import("./BattleArena").then((m) => m.BattleAr
   ssr: false,
   loading: () => <div className="games-arena-stage" />,
 });
+const FightArena = dynamic(() => import("./FightArena").then((m) => m.FightArena), {
+  ssr: false,
+  loading: () => <div className="games-arena-stage" />,
+});
 
 function formatTime(total: number) {
   const m = Math.floor(total / 60);
@@ -33,16 +37,29 @@ export function GamePlay() {
   const winner = useGamesStore((s) => s.winner);
   const lastCorrect = useGamesStore((s) => s.lastCorrect);
   const lastCorrectAt = useGamesStore((s) => s.lastCorrectAt);
+  const fightPhase = useGamesStore((s) => s.fightPhase);
+  const fightActor = useGamesStore((s) => s.fightActor);
+  const fightUntil = useGamesStore((s) => s.fightUntil);
+  const lastHit = useGamesStore((s) => s.lastHit);
   const backToPick = useGamesStore((s) => s.backToPick);
   const tickTimer = useGamesStore((s) => s.tickTimer);
+  const tickFight = useGamesStore((s) => s.tickFight);
 
   const timerOn = remainingSeconds !== null && !winner;
+  const fightWindowOn =
+    kind === "fight" && !winner && (fightPhase === "windup" || fightPhase === "miss");
 
   useEffect(() => {
     if (!timerOn) return;
     const id = window.setInterval(() => tickTimer(), 1000);
     return () => window.clearInterval(id);
   }, [timerOn, tickTimer]);
+
+  useEffect(() => {
+    if (!fightWindowOn) return;
+    const id = window.setInterval(() => tickFight(), 100);
+    return () => window.clearInterval(id);
+  }, [fightWindowOn, tickFight]);
 
   return (
     <div className="games-play">
@@ -52,11 +69,11 @@ export function GamePlay() {
         </button>
         <div className="games-scoreboard">
           <span className="games-score-pill" style={{ borderColor: teamA.color, color: teamA.color }}>
-            {teamA.name}: {teamA.score}
+            {teamA.name}: {kind === "fight" ? teamA.hp : teamA.score}
           </span>
-          <span className="games-score-goal">до {settings.winScore}</span>
+          <span className="games-score-goal">{kind === "fight" ? "HP" : `до ${settings.winScore}`}</span>
           <span className="games-score-pill" style={{ borderColor: teamB.color, color: teamB.color }}>
-            {teamB.name}: {teamB.score}
+            {teamB.name}: {kind === "fight" ? teamB.hp : teamB.score}
           </span>
         </div>
         {remainingSeconds !== null ? (
@@ -102,6 +119,18 @@ export function GamePlay() {
             winScore={settings.winScore}
             lastCorrect={lastCorrect}
             lastCorrectAt={lastCorrectAt}
+          />
+        )}
+        {kind === "fight" && (
+          <FightArena
+            colorA={teamA.color}
+            colorB={teamB.color}
+            hpA={teamA.hp}
+            hpB={teamB.hp}
+            phase={fightPhase}
+            actor={fightActor}
+            until={fightUntil}
+            lastHit={lastHit}
           />
         )}
       </div>

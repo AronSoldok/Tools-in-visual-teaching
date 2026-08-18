@@ -2,4 +2,17 @@ Kenney CC0 1.0 (https://kenney.nl)
 https://kenney.nl/assets/pixel-vehicle-pack
 https://kenney.nl/assets/pixel-platformer
 https://kenney.nl/assets/pirate-pack
+https://kenney.nl/assets/platformer-characters-1
+https://opengameart.org/content/platformer-characters-1-5-characters
 Attribution is appreciated but not required.
+
+Ship / Destroyed Ship by Kutejnikov, CC0 1.0
+https://opengameart.org/content/ship-destroyed-ship
+
+Flame Animation by Zakru, CC0 1.0
+https://opengameart.org/content/flame-animation
+
+Chasersgaming, public domain / CC0
+https://opengameart.org/content/brawler-asset-character-renegade-sms
+https://opengameart.org/content/brawler-asset-character-ranger-sms
+Credit appreciated but not required.
