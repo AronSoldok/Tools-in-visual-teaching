@@ -1397,12 +1397,16 @@ body {
   fill: var(--surface);
 }
 
-.analog-clock-hour-dot {
-  fill: #6bc96b;
+.analog-clock-tick {
+  stroke: #c4a574;
+  stroke-width: 1.5;
+  stroke-linecap: round;
 }
 
-.analog-clock-minute-dot {
-  fill: #c4a574;
+.analog-clock-tick-major {
+  stroke: #c4a574;
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 
 .analog-clock-number {
@@ -1413,12 +1417,19 @@ body {
 }
 
 .analog-clock-number-inner {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .analog-clock-number-outer {
-  font-size: 16px;
+  font-size: 14px;
   fill: #c9682e;
+}
+
+.analog-clock-minute-number {
+  font-size: 13px;
+  font-weight: 800;
+  fill: #c4a574;
+  font-family: var(--font-sans);
 }
 
 .analog-hand {

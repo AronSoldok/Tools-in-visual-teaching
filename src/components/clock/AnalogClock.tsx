@@ -90,24 +90,24 @@ export function AnalogClock() {
       <circle cx={CX} cy={CY} r={168} className="analog-clock-face" />
       {Array.from({ length: 60 }).map((_, i) => {
         const a = (i * 6 * Math.PI) / 180;
-        const r = i % 5 === 0 ? 5 : 2.2;
-        const dist = i % 5 === 0 ? 158 : 160;
-        const x = CX + Math.sin(a) * dist;
-        const y = CY - Math.cos(a) * dist;
+        const major = i % 5 === 0;
+        const inner = major ? 152 : 158;
+        const outer = 165;
         return (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={r}
-            className={i % 5 === 0 ? "analog-clock-hour-dot" : "analog-clock-minute-dot"}
+          <line
+            key={`tick-${i}`}
+            x1={CX + Math.sin(a) * inner}
+            y1={CY - Math.cos(a) * inner}
+            x2={CX + Math.sin(a) * outer}
+            y2={CY - Math.cos(a) * outer}
+            className={major ? "analog-clock-tick-major" : "analog-clock-tick"}
           />
         );
       })}
       {Array.from({ length: 12 }).map((_, i) => {
         const n = i + 1;
         const a = (n * 30 * Math.PI) / 180;
-        const innerDist = is24 ? 104 : 128;
+        const innerDist = is24 ? 90 : 118;
         const x = CX + Math.sin(a) * innerDist;
         const y = CY - Math.cos(a) * innerDist;
         return (
@@ -127,8 +127,8 @@ export function AnalogClock() {
         Array.from({ length: 12 }).map((_, i) => {
           const n = i + 1;
           const a = (n * 30 * Math.PI) / 180;
-          const x = CX + Math.sin(a) * 142;
-          const y = CY - Math.cos(a) * 142;
+          const x = CX + Math.sin(a) * 116;
+          const y = CY - Math.cos(a) * 116;
           return (
             <text
               key={`outer-${n}`}
@@ -142,6 +142,25 @@ export function AnalogClock() {
             </text>
           );
         })}
+      {Array.from({ length: 12 }).map((_, i) => {
+        const n = (i + 1) * 5;
+        const a = ((i + 1) * 30 * Math.PI) / 180;
+        const dist = is24 ? 142 : 146;
+        const x = CX + Math.sin(a) * dist;
+        const y = CY - Math.cos(a) * dist;
+        return (
+          <text
+            key={`min-${n}`}
+            x={x}
+            y={y}
+            className="analog-clock-minute-number"
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {n}
+          </text>
+        );
+      })}
       <g
         className={`analog-hand analog-hand-hour ${hourLocked ? "locked" : ""}`}
         transform={`rotate(${hAngle} ${CX} ${CY})`}
