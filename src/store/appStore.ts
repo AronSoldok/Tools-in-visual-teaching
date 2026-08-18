@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type ActiveApp = "blocks" | "map" | "clock";
+export type ActiveApp = "blocks" | "map" | "clock" | "games";
 
 interface AppState {
   activeApp: ActiveApp;

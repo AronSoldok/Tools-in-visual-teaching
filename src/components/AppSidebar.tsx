@@ -6,6 +6,7 @@ const APPS: { id: ActiveApp; label: string; icon: string; title: string }[] = [
   { id: "blocks", label: "Блоки", icon: "▦", title: "Блоки" },
   { id: "map", label: "Карта", icon: "🌍", title: "Глобус и карта" },
   { id: "clock", label: "Часы", icon: "🕒", title: "Интерактивные часы" },
+  { id: "games", label: "Игры", icon: "🎮", title: "Математические игры" },
 ];
 
 export function AppSidebar() {
