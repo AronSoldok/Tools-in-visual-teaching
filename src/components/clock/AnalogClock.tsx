@@ -91,7 +91,7 @@ export function AnalogClock() {
       {Array.from({ length: 60 }).map((_, i) => {
         const a = (i * 6 * Math.PI) / 180;
         const major = i % 5 === 0;
-        const inner = major ? 152 : 158;
+        const inner = major ? 156 : 160;
         const outer = 165;
         return (
           <line
